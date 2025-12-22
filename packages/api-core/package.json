@@ -2,9 +2,13 @@
   "name": "@animated-spork/api-core",
   "version": "1.0.0",
   "description": "API core utilities and middleware",
+  "type": "module",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "engines": {
+    "node": ">=20.0.0"
   },
   "keywords": [],
   "author": "",
