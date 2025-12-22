@@ -1,0 +1,12 @@
+{
+  "name": "@animated-spork/demo-api",
+  "version": "1.0.0",
+  "description": "Demo API application",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
