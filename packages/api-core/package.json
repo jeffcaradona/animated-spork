@@ -1,16 +1,20 @@
 {
   "name": "@animated-spork/api-core",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "API core utilities and middleware",
   "type": "module",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "exports": "./src/app.js",
   "engines": {
     "node": ">=20.0.0"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC"
+  "author": "Jeff Caradona <jeffcaradona@gmail.com>",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.2.1"
+  }
 }

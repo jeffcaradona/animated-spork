@@ -1,6 +1,6 @@
 {
   "name": "@animated-spork/demo-api",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Demo API application",
   "type": "module",
   "main": "index.js",
@@ -11,6 +11,6 @@
     "node": ">=20.0.0"
   },
   "keywords": [],
-  "author": "",
+  "author": "Jeff Caradona <jeffcaradona@gmail.com>",
   "license": "ISC"
 }

@@ -1,6 +1,6 @@
 {
   "name": "animated-spork",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Building an opinionated template on top of unopinionated Express",
   "private": true,
   "type": "module",
@@ -12,12 +12,24 @@
     "apps/demo-api"
   ],
   "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "engines": {
     "node": ">=20.0.0"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC"
+  "author": "Jeff Caradona <jeffcaradona@gmail.com>",
+  "license": "ISC",
+  "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "@jeffcaradona/eslint-plugin-eta": "^0.3.0",
+    "cross-env": "^10.1.0",
+    "eslint": "^9.39.2",
+    "eslint-plugin-n": "^17.23.1",
+    "nodemon": "^3.1.11",
+    "mocha": "^11.7.5",
+    "eslint-plugin-mocha":"11.2.0"
+  }
 }

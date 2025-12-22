@@ -1,6 +1,6 @@
 {
   "name": "@animated-spork/frontend-core",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Frontend core components and utilities",
   "type": "module",
   "main": "index.js",
@@ -11,6 +11,9 @@
     "node": ">=20.0.0"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC"
+  "author": "Jeff Caradona <jeffcaradona@gmail.com>",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.2.1"
+  }
 }
