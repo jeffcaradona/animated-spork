@@ -15,4 +15,23 @@ export default [
       'no-console': 'warn',
     },
   },
+  {
+    files: ['**/tests/**/*.js', '**/*.spec.js', '**/*.test.js'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      globals: {
+        describe: 'readonly',
+        it: 'readonly',
+        before: 'readonly',
+        after: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+      },
+    },
+    rules: {
+      'no-console': 'off',
+      'no-unused-expressions': 'off',
+    },
+  },
 ];
