@@ -5,10 +5,14 @@ REVISION NOTES (from PR #3 - copilot/update-project-outline-for-factory):
 This document has been updated to reflect the package distribution strategy and factory pattern.
 Key changes include:
 - Added shared-core package to architecture
-- Emphasized packages over templates to avoid "template drift"
+- Emphasized packages over project templates to avoid "template drift"
 - Clarified factory pattern for Express apps
-- Updated packaging strategy to focus on npm packages, not templates
-- Added explicit non-goal about template distribution
+- Updated packaging strategy to focus on npm packages, not project template files
+- Added explicit non-goal about project template distribution
+
+NOTE: This outline distinguishes between:
+- "Project templates" (drop-in files/directories) - which we AVOID to prevent drift
+- "View templates" (Eta/EJS rendering templates) - which frontend-core DOES distribute
 -->
 
 ## Goal
@@ -152,8 +156,12 @@ shared-core **does not**:
 <!-- REVISION: Clarified that frontend-core is a factory that exports router creation functions -->
 
 - **Factory function** that returns configured Express routers (no `listen`)
-- View engine and layouts
-- Static assets
+- **View templates** (Eta/EJS) for rendering:
+  - Base layouts distributed with the package
+  - Common UI components and pages (login, error pages, admin shell)
+  - Layered view resolution (package views + app-specific views)
+- View engine configuration (Eta)
+- Static assets (CSS, JS, images)
 - Session and cookie setup
 - Login/logout UX
 - Access denied pages
@@ -216,10 +224,13 @@ api-core **does not**:
 ## Repo & Packaging Strategy
 
 <!-- 
-REVISION: Updated to emphasize package distribution over templates.
-This is critical to avoid "template drift" where copies of template code 
+REVISION: Updated to emphasize package distribution over project templates.
+This is critical to avoid "project template drift" where copied project files 
 diverge and become unmaintainable. Instead, we distribute capabilities 
 as versioned npm packages that apps depend on.
+
+Note: frontend-core DOES distribute view templates (Eta/EJS files) within the 
+package for rendering layouts and common UI components.
 -->
 
 ### Current (Monorepo Development)
@@ -233,11 +244,12 @@ as versioned npm packages that apps depend on.
 ### Package Distribution Strategy
 - Core packages (`shared-core`, `frontend-core`, `api-core`) are **npm packages**
 - Apps import and use factory functions from these packages
+- **frontend-core includes view templates (Eta)** for rendering common layouts/pages
 - Apps provide:
   - Configuration (OAuth keys, DB connection, etc.)
   - Domain-specific routes and business logic
-  - Custom views/templates (if needed)
-- Updates to core functionality happen via **package version updates**, not code copying
+  - Additional view templates (layered with frontend-core's templates)
+- Updates to core functionality happen via **package version updates**, not file copying
 
 ### How Apps Consume Packages
 
@@ -257,10 +269,11 @@ app.listen(3000);
 ```
 
 ### Benefits of Package Approach
-- **No template drift**: All apps get updates by upgrading package versions
+- **No project template drift**: All apps get updates by upgrading package versions
 - **Centralized fixes**: Security patches and bug fixes propagate automatically
 - **Versioned evolution**: Apps can upgrade on their own timeline using semver
 - **Composition over copying**: Apps compose functionality rather than forking code
+- **View templates bundled**: Common UI layouts/components distributed within packages
 
 ---
 
@@ -304,14 +317,16 @@ app.listen(3000);
 
 ## Non-Goals (Explicit)
 
-<!-- REVISION: Added explicit non-goal about template distribution to emphasize package-first approach -->
+<!-- REVISION: Added explicit non-goal about project template distribution to emphasize package-first approach -->
 
 - Browser-to-API direct communication
 - Shared sessions across services
 - Frontend querying MSSQL
 - Open user self-signup
-- **Template-based distribution** (we distribute packages, not templates, to avoid template drift)
+- **Project template-based distribution** (we distribute packages, not drop-in project files, to avoid drift)
 - Copying and forking core code into individual apps
+
+Note: View templates (Eta/EJS) ARE distributed within frontend-core package.
 
 ---
 
@@ -320,21 +335,29 @@ app.listen(3000);
 <!-- REVISION: New section addressing the core motivation for package-based distribution -->
 
 ### The Problem
-Traditional template-based approaches suffer from "template drift":
-- Teams copy template code to start new projects
-- Template gets updated with fixes and improvements
+Traditional **project template-based** approaches suffer from "template drift":
+- Teams copy project template files/directories to start new projects
+- Project template gets updated with fixes and improvements
 - Existing projects don't automatically get those updates
 - Each project becomes a unique maintenance burden
 - Security patches require manual updates across all projects
 
 ### Our Solution: Package-Based Architecture
-Instead of distributing templates, we distribute **versioned npm packages**:
+Instead of distributing project templates (drop-in files), we distribute **versioned npm packages**:
 
 1. **Central Updates**: Core functionality lives in npm packages
 2. **Version Control**: Apps specify which version they depend on
 3. **Gradual Upgrades**: Apps can upgrade when ready, using semver
 4. **Automatic Propagation**: Critical fixes can be applied by bumping versions
 5. **Composition**: Apps compose functionality via imports, not copy-paste
+
+### View Templates vs Project Templates
+**Important distinction:**
+- **Project templates** (drop-in files) → ❌ AVOIDED to prevent drift
+- **View templates** (Eta/EJS rendering files) → ✅ DISTRIBUTED within frontend-core package
+  - Common layouts, error pages, admin shell UI
+  - Apps can layer their own views on top using layered view resolution
+  - Updates to view templates propagate via package version updates
 
 ### Factory Pattern
 Our core packages export factory functions, not full applications:
@@ -344,6 +367,7 @@ Our core packages export factory functions, not full applications:
 export function createFrontendApp(config) {
   const app = express();
   // Set up sessions, OAuth, middleware, etc.
+  // Configure Eta view engine with package-bundled templates
   return app; // Returns router, not a listening server
 }
 ```
@@ -351,6 +375,7 @@ export function createFrontendApp(config) {
 This allows apps to:
 - Configure the core functionality with their specific needs
 - Add their domain routes on top
+- Use or override the distributed view templates
 - Maintain full control of the application lifecycle
 - Upgrade the core package independently
 
@@ -364,5 +389,6 @@ A clean, secure, reusable Express-based platform where:
 - New apps are mostly configuration and domain routes
 - Auth and infrastructure are standardized in versioned packages
 - Frontend and API can evolve independently
-- **No template drift**: Updates propagate via package versions
+- **No project template drift**: Updates propagate via package versions
 - Apps compose functionality from packages rather than copying code
+- View templates (Eta/EJS) are distributed within packages for consistent UI
