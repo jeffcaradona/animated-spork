@@ -2,9 +2,13 @@
   "name": "@animated-spork/shared-core",
   "version": "1.0.0",
   "description": "Shared core utilities and types",
+  "type": "module",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "engines": {
+    "node": ">=20.0.0"
   },
   "keywords": [],
   "author": "",

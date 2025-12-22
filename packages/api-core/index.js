@@ -1,2 +1,2 @@
 // API core utilities and middleware
-module.exports = {};
+export default {};

@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Building an opinionated template on top of unopinionated Express",
   "private": true,
+  "type": "module",
   "workspaces": [
     "packages/shared-core",
     "packages/frontend-core",
@@ -12,6 +13,9 @@
   ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "engines": {
+    "node": ">=20.0.0"
   },
   "keywords": [],
   "author": "",
