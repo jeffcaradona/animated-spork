@@ -1,0 +1,12 @@
+{
+  "name": "@animated-spork/api-core",
+  "version": "1.0.0",
+  "description": "API core utilities and middleware",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
