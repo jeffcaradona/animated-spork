@@ -1,11 +1,23 @@
 # Project Outline
 
+<!-- 
+REVISION NOTES (from PR #3 - copilot/update-project-outline-for-factory):
+This document has been updated to reflect the package distribution strategy and factory pattern.
+Key changes include:
+- Added shared-core package to architecture
+- Emphasized packages over templates to avoid "template drift"
+- Clarified factory pattern for Express apps
+- Updated packaging strategy to focus on npm packages, not templates
+- Added explicit non-goal about template distribution
+-->
+
 ## Goal
 Build a reusable, composable Express-based architecture consisting of:
 
-- **frontend-core**: a reusable server-rendered web frontend shell
-- **api-core**: a reusable API shell that sits in front of MSSQL
-- Both packaged as private modules and composed into concrete applications
+- **shared-core**: common utilities, validation, and shared logic
+- **frontend-core**: a reusable server-rendered web frontend shell (factory)
+- **api-core**: a reusable API shell (factory) that sits in front of MSSQL
+- All packaged as private npm modules and composed into concrete applications
 
 The browser **never** talks directly to the API.  
 All browser interaction goes through the frontend service (BFF pattern).
@@ -14,16 +26,18 @@ All browser interaction goes through the frontend service (BFF pattern).
 
 ## High-Level Architecture
 
+<!-- REVISION: Added shared-core to the architecture diagram -->
+
 ```
 Browser
   |
   |  (HTTP, cookies/session)
   v
-Frontend Service (Express + frontend-core)
+Frontend Service (Express + frontend-core + shared-core)
   |
   |  (HTTP + Authorization: Bearer JWT)
   v
-API Service (Express + api-core)
+API Service (Express + api-core + shared-core)
   |
   |  (stored procedures, views only)
   v
@@ -34,6 +48,8 @@ Microsoft SQL Server
 
 ## Core Principles
 
+<!-- REVISION: Updated to emphasize factory pattern and package-based approach -->
+
 - Clear separation of concerns
 - Frontend owns UX, sessions, and rendering
 - API owns data access, authorization, and business rules
@@ -41,6 +57,8 @@ Microsoft SQL Server
   - Friendly gate in frontend (UX)
   - Hard gate in API (security)
 - Everything is composable via Express routers, not monolithic apps
+- **Factory Pattern**: Core packages export factory functions that create configured Express routers
+- **Package-First Approach**: Distribute platform capabilities as npm packages, not templates
 
 ---
 
@@ -112,9 +130,28 @@ Microsoft SQL Server
 
 ---
 
+## shared-core Responsibilities
+
+<!-- REVISION: Added section for shared-core package (previously missing from outline) -->
+
+- Common utilities shared by both frontend-core and api-core
+- Validation logic (e.g., input sanitization, schema validation)
+- Shared domain types and interfaces
+- Common error types and handling utilities
+- Configuration parsing and validation helpers
+
+shared-core **does not**:
+- Depend on Express or web frameworks
+- Contain business logic specific to frontend or API
+- Access databases or external services directly
+
+---
+
 ## frontend-core Responsibilities
 
-- Express router factory (no `listen`)
+<!-- REVISION: Clarified that frontend-core is a factory that exports router creation functions -->
+
+- **Factory function** that returns configured Express routers (no `listen`)
 - View engine and layouts
 - Static assets
 - Session and cookie setup
@@ -135,7 +172,9 @@ frontend-core **does not**:
 
 ## api-core Responsibilities
 
-- Express router factory
+<!-- REVISION: Clarified that api-core is a factory that exports router creation functions -->
+
+- **Factory function** that returns configured Express routers
 - JSON parsing and limits
 - Request ID and logging
 - JWT verification middleware
@@ -176,16 +215,52 @@ api-core **does not**:
 
 ## Repo & Packaging Strategy
 
-### Recommended (Initial)
-- Monorepo with workspaces:
-  - `packages/frontend-core`
-  - `packages/api-core`
-  - `apps/frontend-*`
-  - `apps/api-*`
+<!-- 
+REVISION: Updated to emphasize package distribution over templates.
+This is critical to avoid "template drift" where copies of template code 
+diverge and become unmaintainable. Instead, we distribute capabilities 
+as versioned npm packages that apps depend on.
+-->
 
-### Later
-- Publish `frontend-core` and `api-core` as private npm packages
-- Use templates for new projects
+### Current (Monorepo Development)
+- Monorepo with npm workspaces:
+  - `packages/shared-core` - common utilities
+  - `packages/frontend-core` - frontend factory
+  - `packages/api-core` - API factory
+  - `apps/demo-web` - example frontend app
+  - `apps/demo-api` - example API app
+
+### Package Distribution Strategy
+- Core packages (`shared-core`, `frontend-core`, `api-core`) are **npm packages**
+- Apps import and use factory functions from these packages
+- Apps provide:
+  - Configuration (OAuth keys, DB connection, etc.)
+  - Domain-specific routes and business logic
+  - Custom views/templates (if needed)
+- Updates to core functionality happen via **package version updates**, not code copying
+
+### How Apps Consume Packages
+
+```javascript
+// Example: apps/demo-web/index.js
+import { createFrontendApp } from '@my-org/frontend-core';
+import myDomainRoutes from './routes/index.js';
+
+const app = createFrontendApp({
+  sessionSecret: process.env.SESSION_SECRET,
+  apiBaseUrl: process.env.API_URL,
+  githubOAuth: { /* ... */ }
+});
+
+app.use('/my-feature', myDomainRoutes);
+app.listen(3000);
+```
+
+### Benefits of Package Approach
+- **No template drift**: All apps get updates by upgrading package versions
+- **Centralized fixes**: Security patches and bug fixes propagate automatically
+- **Versioned evolution**: Apps can upgrade on their own timeline using semver
+- **Composition over copying**: Apps compose functionality rather than forking code
 
 ---
 
@@ -206,34 +281,88 @@ api-core **does not**:
 
 ## Build Order (Working Plan)
 
-1. Create monorepo structure
-2. Build api-core:
+<!-- REVISION: Updated to include shared-core in the build plan -->
+
+1. Create monorepo structure with workspaces
+2. Build shared-core:
+   - Common utilities and validation
+   - Shared types
+3. Build api-core factory:
    - JWT verification
    - Auth exchange endpoint
    - Health endpoint
-3. Build frontend-core:
+4. Build frontend-core factory:
    - Sessions
    - GitHub OAuth login
    - API client wrapper
-4. Wire frontend ↔ API auth exchange
-5. Add admin role mapping
-6. Add example domain routes
-7. Package and document cores
+5. Wire frontend ↔ API auth exchange
+6. Add admin role mapping
+7. Add example domain routes in demo apps
+8. Test and document core packages
 
 ---
 
 ## Non-Goals (Explicit)
 
+<!-- REVISION: Added explicit non-goal about template distribution to emphasize package-first approach -->
+
 - Browser-to-API direct communication
 - Shared sessions across services
 - Frontend querying MSSQL
 - Open user self-signup
+- **Template-based distribution** (we distribute packages, not templates, to avoid template drift)
+- Copying and forking core code into individual apps
+
+---
+
+## Avoiding Template Drift
+
+<!-- REVISION: New section addressing the core motivation for package-based distribution -->
+
+### The Problem
+Traditional template-based approaches suffer from "template drift":
+- Teams copy template code to start new projects
+- Template gets updated with fixes and improvements
+- Existing projects don't automatically get those updates
+- Each project becomes a unique maintenance burden
+- Security patches require manual updates across all projects
+
+### Our Solution: Package-Based Architecture
+Instead of distributing templates, we distribute **versioned npm packages**:
+
+1. **Central Updates**: Core functionality lives in npm packages
+2. **Version Control**: Apps specify which version they depend on
+3. **Gradual Upgrades**: Apps can upgrade when ready, using semver
+4. **Automatic Propagation**: Critical fixes can be applied by bumping versions
+5. **Composition**: Apps compose functionality via imports, not copy-paste
+
+### Factory Pattern
+Our core packages export factory functions, not full applications:
+
+```javascript
+// In @my-org/frontend-core
+export function createFrontendApp(config) {
+  const app = express();
+  // Set up sessions, OAuth, middleware, etc.
+  return app; // Returns router, not a listening server
+}
+```
+
+This allows apps to:
+- Configure the core functionality with their specific needs
+- Add their domain routes on top
+- Maintain full control of the application lifecycle
+- Upgrade the core package independently
 
 ---
 
 ## Result
 
+<!-- REVISION: Updated to emphasize package distribution and avoiding template drift -->
+
 A clean, secure, reusable Express-based platform where:
 - New apps are mostly configuration and domain routes
-- Auth and infrastructure are standardized
+- Auth and infrastructure are standardized in versioned packages
 - Frontend and API can evolve independently
+- **No template drift**: Updates propagate via package versions
+- Apps compose functionality from packages rather than copying code
