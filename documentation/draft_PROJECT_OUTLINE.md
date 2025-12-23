@@ -13,6 +13,13 @@ Key changes include:
 NOTE: This outline distinguishes between:
 - "Project templates" (drop-in files/directories) - which we AVOID to prevent drift
 - "View templates" (Eta/EJS rendering templates) - which frontend-core DOES distribute
+
+📚 DOCUMENTATION UPDATE (2025-12-22):
+This document provides architectural details. For a complete documentation overview:
+- See PROJECT_GOALS.md for project objectives and principles
+- See PHASES.md for the implementation plan and roadmap
+- See MILESTONES.md for detailed progress tracking
+- See DEVELOPMENT_GUIDE.md for getting started with development
 -->
 
 ## Goal
