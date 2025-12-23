@@ -29,6 +29,16 @@ jobs:
       
       - name: Run tests and generate coverage for shared-core
         run: npm run coverage:shared-core
+        continue-on-error: false
+      
+      - name: List workspace structure for debugging
+        run: |
+          echo "=== Workspace root ==="
+          ls -la
+          echo "=== packages/shared-core ==="
+          ls -la packages/shared-core/ || echo "shared-core not found"
+          echo "=== packages/shared-core/coverage ==="
+          ls -la packages/shared-core/coverage/ || echo "coverage dir not found"
       
       - name: Verify coverage report exists
         run: |
