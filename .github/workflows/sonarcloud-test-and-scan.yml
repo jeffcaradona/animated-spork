@@ -30,6 +30,18 @@ jobs:
       - name: Run tests and generate coverage for shared-core
         run: npm run coverage:shared-core
       
+      - name: Verify coverage report exists
+        run: |
+          echo "Checking for LCOV file..."
+          ls -la packages/shared-core/coverage/ || echo "Coverage directory not found"
+          if [ -f "packages/shared-core/coverage/lcov.info" ]; then
+            echo "LCOV file found"
+            head -5 packages/shared-core/coverage/lcov.info
+          else
+            echo "LCOV file NOT found"
+            exit 1
+          fi
+      
       - name: Normalize LCOV paths for monorepo
         run: |
           const fs = require('fs');
@@ -37,6 +49,7 @@ jobs:
           let content = fs.readFileSync(path, 'utf8');
           content = content.replace(/SF:([^/\\]+)/g, 'SF:packages/shared-core/$1').replace(/\\/g, '/');
           fs.writeFileSync(path, content);
+          console.log('LCOV paths normalized for monorepo');
         shell: node {0}
       
       - name: SonarCloud Scan
