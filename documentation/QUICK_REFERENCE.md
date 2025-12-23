@@ -29,12 +29,14 @@ A **reusable Express platform** with:
 ## ✅ What's Done?
 
 - [x] Project setup and documentation
-- [x] shared-core package (logging, debugging)
+- [x] shared-core package - Phase 1 (logging, debugging)
   - 90%+ test coverage
   - Full documentation
   - Tests with Mocha/Chai/Sinon
+  - Additional utilities to be added as needed during api-core/frontend-core development
 
 **Still To Do:**
+- [ ] shared-core - Additional utilities (validation, types, error handling) as patterns emerge
 - [ ] api-core (JWT, MSSQL, API factory)
 - [ ] frontend-core (OAuth, sessions, views)
 - [ ] demo-api application
@@ -78,11 +80,13 @@ npm test    # Verify environment
 
 | Package | Status | Coverage | Documentation |
 |---------|--------|----------|---------------|
-| shared-core | ✅ Complete | 90%+ | ✅ Excellent |
+| shared-core | 🟡 Phase 1 Complete | 90%+ | ✅ Excellent |
 | api-core | 🔴 Stub | - | 📝 Planned |
 | frontend-core | 🔴 Stub | - | 📝 Planned |
 | demo-api | 🔴 Stub | - | 📝 Planned |
 | demo-web | 🔴 Stub | - | 📝 Planned |
+
+**Note:** shared-core Phase 1 (logging/debugging) is complete. Additional utilities (validation, types, error handling) will be added iteratively as common patterns emerge.
 
 ---
 

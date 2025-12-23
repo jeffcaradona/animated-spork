@@ -145,11 +145,18 @@ Microsoft SQL Server
 
 <!-- REVISION: Added section for shared-core package (previously missing from outline) -->
 
+**Planned capabilities** (added iteratively as needs emerge):
 - Common utilities shared by both frontend-core and api-core
 - Validation logic (e.g., input sanitization, schema validation)
 - Shared domain types and interfaces
 - Common error types and handling utilities
 - Configuration parsing and validation helpers
+
+**Current implementation** (Phase 1 - complete):
+- Debug utility factory (`createDebugger`)
+- Logger utility factory (`createLogger`)
+
+**Implementation approach:** Rather than building all potential shared utilities upfront, shared-core grows organically. As we develop api-core and frontend-core, we'll identify common patterns and extract them into shared-core. This keeps the package lean and focused on actual shared needs (e.g., if both packages need JWT utilities, we'll extract those; if only api-core needs them, they stay in api-core).
 
 shared-core **does not**:
 - Depend on Express or web frameworks

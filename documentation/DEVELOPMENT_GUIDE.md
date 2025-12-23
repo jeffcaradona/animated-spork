@@ -30,7 +30,7 @@ That's it! You're ready to start developing.
 ```
 animated-spork/
 ├── packages/              # Core reusable packages
-│   ├── shared-core/      # ✅ Common utilities (COMPLETE)
+│   ├── shared-core/      # 🟡 Common utilities (Phase 1 complete)
 │   ├── frontend-core/    # 🔴 Frontend factory (stub)
 │   └── api-core/         # 🔴 API factory (stub)
 ├── apps/                 # Demo applications
@@ -80,11 +80,12 @@ Before diving into code, read these documents **in order**:
 
 ### What's Complete ✅
 
-**`packages/shared-core`** - Fully implemented
+**`packages/shared-core` - Phase 1** - Foundational utilities implemented
 - Debug utility (`createDebugger`)
 - Logger utility (`createLogger`)
 - 90%+ test coverage
 - Comprehensive documentation
+- **Note:** Additional utilities (validation, types, error handling) will be added as common patterns emerge during api-core/frontend-core development
 
 **Project Documentation** - Finalized
 - Goals, phases, milestones documented

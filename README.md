@@ -16,7 +16,7 @@ A **reusable, package-based architecture** that provides:
 
 | Package | Status | Description |
 |---------|--------|-------------|
-| **[@animated-spork/shared-core](./packages/shared-core)** | ✅ Complete | Common utilities (logging, debugging) |
+| **[@animated-spork/shared-core](./packages/shared-core)** | 🟡 Phase 1 | Common utilities (logging, debugging; more to come) |
 | **[@animated-spork/api-core](./packages/api-core)** | 🔴 Planned | API server factory with JWT and MSSQL |
 | **[@animated-spork/frontend-core](./packages/frontend-core)** | 🔴 Planned | Frontend server factory with OAuth and sessions |
 
