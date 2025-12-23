@@ -29,28 +29,6 @@ jobs:
       
       - name: Run tests and generate coverage for shared-core
         run: npm run coverage:shared-core
-        continue-on-error: false
-      
-      - name: List workspace structure for debugging
-        run: |
-          echo "=== Workspace root ==="
-          ls -la
-          echo "=== packages/shared-core ==="
-          ls -la packages/shared-core/ || echo "shared-core not found"
-          echo "=== packages/shared-core/coverage ==="
-          ls -la packages/shared-core/coverage/ || echo "coverage dir not found"
-      
-      - name: Verify coverage report exists
-        run: |
-          echo "Checking for LCOV file..."
-          ls -la packages/shared-core/coverage/ || echo "Coverage directory not found"
-          if [ -f "packages/shared-core/coverage/lcov.info" ]; then
-            echo "LCOV file found"
-            head -5 packages/shared-core/coverage/lcov.info
-          else
-            echo "LCOV file NOT found"
-            exit 1
-          fi
       
       - name: Normalize LCOV paths for monorepo
         run: |
@@ -63,8 +41,8 @@ jobs:
         shell: node {0}
       
       - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@v3.1.0
-        continue-on-error: true  # Don't block PRs on quality gate failures during initial development
+        uses: SonarSource/sonarqube-scan-action@v7.0.0
+        continue-on-error: true
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
