@@ -30,6 +30,13 @@ jobs:
       - name: Run tests and generate coverage for shared-core
         run: npm run coverage:shared-core
       
+      - name: Fix LCOV file paths for SonarCloud (Windows)
+        run: |
+          $lcovFile = "packages/shared-core/coverage/lcov.info"
+          if (Test-Path $lcovFile) {
+            (Get-Content $lcovFile) -replace '\\', '/' | Set-Content $lcovFile
+          }
+      
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v3.1.0
         continue-on-error: true  # Don't block PRs on quality gate failures during initial development
