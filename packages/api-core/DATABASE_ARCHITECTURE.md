@@ -249,6 +249,113 @@ execStoredProc(name, params, databaseName?)
 
 ---
 
+## Why Singleton Pools?
+
+This section explains the rationale behind enforcing singleton connection pools per named database in MSSQL environments.
+
+### The Problem: Multiple Pools Per Database
+
+If each controller (or route handler, or service) creates its own connection pool to the same database, serious problems arise:
+
+```javascript
+// ❌ BAD: Each controller creates its own pool
+// users-controller.js
+const pool = new sql.ConnectionPool(config);
+await pool.connect();
+
+// orders-controller.js
+const pool = new sql.ConnectionPool(config);
+await pool.connect();
+
+// products-controller.js
+const pool = new sql.ConnectionPool(config);
+await pool.connect();
+```
+
+### Consequences of Multiple Pools
+
+| Issue | Impact |
+|-------|--------|
+| **Connection exhaustion** | Each pool maintains `min` connections. 3 pools × 5 min = 15 idle connections. With 20 controllers, you're at 100+ connections before any traffic. MSSQL has hard limits (default ~32,767, but often capped lower by licensing/resources). |
+| **No query queuing across pools** | Pool A has 10 busy connections while Pool B sits idle. Work isn't distributed—each pool queues independently. |
+| **Memory overhead** | Each pool allocates buffers, maintains state, runs health checks. Multiply by number of pools. |
+| **Unpredictable behavior under load** | Some controllers starve while others have excess capacity. No global backpressure. |
+| **Connection thrashing** | Pools scale up/down independently, causing constant connect/disconnect churn on the database server. |
+| **Monitoring blind spots** | Can't get accurate metrics on "how many connections to database X?" when spread across pools. |
+| **Shutdown complexity** | Must track and close every pool. Miss one and connections leak, preventing graceful shutdown. |
+
+### Real-World Example
+
+An API with 15 controllers, each hitting the same database:
+
+| Approach | Min Connections | Max Connections | Pools to Manage |
+|----------|-----------------|-----------------|-----------------|
+| Pool per controller | 75 (15 × 5) | 150 (15 × 10) | 15 |
+| Singleton pool | 5 | 10 | 1 |
+
+The singleton approach uses **93% fewer idle connections** and has a single point of monitoring and control.
+
+### Why Module Caching Doesn't Help
+
+A common misconception is that using the same variable name `pool` in each controller will result in sharing the same instance due to Node.js module caching. **This is incorrect.**
+
+```javascript
+// ❌ STILL BAD: Same variable name, different instances
+// users-controller.js
+const pool = new sql.ConnectionPool(config);
+
+// orders-controller.js
+const pool = new sql.ConnectionPool(config);
+```
+
+**Why it doesn't work:**
+
+1. **Each file is a separate module** with its own scope
+2. **`new` always creates a new instance** regardless of variable name
+3. **Module caching only caches the module's exports**, not internal variables
+
+When Node.js loads `users-controller.js`, it caches that module. But the `const pool = new sql.ConnectionPool(config)` line **executes fresh** when the module loads—creating a brand new pool instance in that module's scope.
+
+### What Module Caching Actually Does
+
+```javascript
+// database.js
+import sql from 'mssql';
+const pool = new sql.ConnectionPool(config);
+export { pool };
+
+// users-controller.js
+import { pool } from './database.js'; // Gets cached export
+
+// orders-controller.js
+import { pool } from './database.js'; // Gets SAME cached export
+```
+
+**This works** because:
+1. `database.js` loads once, creates one pool, exports it
+2. Subsequent `import` statements return the **cached exports**
+3. All controllers reference the **same pool instance**
+
+### Our Architecture's Approach
+
+The connection manager uses an explicit singleton pattern rather than relying on module caching behavior (which can break in edge cases like different paths to same file, ESM vs CJS, bundlers, etc.):
+
+```javascript
+// connection-manager.js
+const pools = new Map();
+
+export function getPool(databaseName) {
+  if (!pools.has(databaseName)) {
+    pools.set(databaseName, new sql.ConnectionPool(config));
+  }
+  return pools.get(databaseName); // Always same instance for same name
+}
+```
+
+This explicit check-before-create pattern guarantees singleton behavior regardless of how modules are imported or bundled.
+
+---
+
 ### 5. Database Factory Function
 
 **Location**: `src/database/index.js`
