@@ -21,7 +21,7 @@
     "coverage:api-core": "c8 --report-dir=packages/api-core/coverage --reporter=lcov --reporter=text-summary mocha --recursive \"packages/api-core/tests/**/*.spec.js\" --exit"
   },
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=22.0.0"
   },
   "keywords": [],
   "author": "Jeff Caradona <jeffcaradona@gmail.com>",
