@@ -3,7 +3,7 @@ name: SonarCloud api-core Test and Scan
 on:
   push:
     branches:
-      - feature/database_abstraction
+      - feature/database_abstratcion
     paths:
       - 'packages/api-core/**'
       - '.github/workflows/sonarcloud-api-core-scan.yml'
