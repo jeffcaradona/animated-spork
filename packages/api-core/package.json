@@ -15,7 +15,7 @@
     "./database/errors": "./src/database/errors.js"
   },
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=22.0.0"
   },
   "keywords": [
     "express",
