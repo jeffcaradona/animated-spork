@@ -77,6 +77,7 @@ The workflow runs on:
 
 - `--all-projects`: Scans all packages in the monorepo (shared-core, api-core, frontend-core, demo-api, demo-web)
 - `continue-on-error: true`: Workflow won't fail if vulnerabilities are found
+- `@master`: Uses the latest stable version of Snyk actions (they maintain backward compatibility)
 - SARIF upload: Integrates with GitHub Security tab for easy review
 
 ## Viewing Results
