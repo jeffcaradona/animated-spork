@@ -4,6 +4,7 @@ This guide provides detailed instructions for implementing Phase 1 of the api-co
 
 **Phase 1 Goals**:
 - Define database interfaces (`IDatabase`, `IConnection`, `ITransaction`)
+- Implement error hierarchy with Express compatibility
 - Implement SQLite adapter for development/testing
 - Implement connection manager for multi-database routing
 - Create factory function for initializing the database client
@@ -12,93 +13,106 @@ This guide provides detailed instructions for implementing Phase 1 of the api-co
 
 ---
 
-## 1. Error Handling & Exception Types
+## 1. Interfaces & Error Handling
 
-All database operations must handle errors gracefully and provide meaningful error information to consumers.
+Phase 1 Item 1 consists of two core foundation pieces: error classes and interface contracts.
 
-### Error Hierarchy
+### 1.1 Error Hierarchy
 
-Create `src/database/errors.js` with custom error classes:
+All database operations must handle errors gracefully with meaningful error information. Create `src/database/errors.js` with custom error classes:
 
 ```javascript
 /**
  * Base database error class.
  * All database-related errors inherit from this.
+ * Compatible with Express error middleware via next(error).
  */
 export class DatabaseError extends Error {
   /**
-   * @param {string} message - Error message
-   * @param {string} code - Machine-readable error code
+   * @param {string} message - Error message for logging/display
+   * @param {string} code - Machine-readable error code (e.g., 'CONNECTION_ERROR')
+   * @param {number} [statusCode=500] - HTTP status code (default: 500)
    * @param {object} [context] - Additional context about the error
+   * @param {Error} [originalError] - Original error from driver (for logging)
    */
-  constructor(message, code, context = {}) {
+  constructor(message, code, statusCode = 500, context = {}, originalError = null) {
     super(message);
     this.name = 'DatabaseError';
     this.code = code;
+    this.statusCode = statusCode;
     this.context = context;
+    this.originalError = originalError;
     Error.captureStackTrace(this, this.constructor);
   }
 }
 
 /**
  * Thrown when a database connection cannot be established or maintained.
+ * HTTP Status: 503 Service Unavailable
  */
 export class ConnectionError extends DatabaseError {
-  constructor(message, context) {
-    super(message, 'CONNECTION_ERROR', context);
+  constructor(message, context, originalError) {
+    super(message, 'CONNECTION_ERROR', 503, context, originalError);
     this.name = 'ConnectionError';
   }
 }
 
 /**
  * Thrown when a query times out.
+ * HTTP Status: 504 Gateway Timeout
  */
 export class QueryTimeoutError extends DatabaseError {
-  constructor(message, context) {
-    super(message, 'QUERY_TIMEOUT', context);
+  constructor(message, context, originalError) {
+    super(message, 'QUERY_TIMEOUT', 504, context, originalError);
     this.name = 'QueryTimeoutError';
   }
 }
 
 /**
  * Thrown when a SQL query has invalid syntax or is rejected by the database.
+ * HTTP Status: 400 Bad Request
  */
 export class QueryError extends DatabaseError {
-  constructor(message, context) {
-    super(message, 'QUERY_ERROR', context);
+  constructor(message, context, originalError) {
+    super(message, 'QUERY_ERROR', 400, context, originalError);
     this.name = 'QueryError';
   }
 }
 
 /**
  * Thrown when a required configuration is missing or invalid.
+ * HTTP Status: 400 Bad Request
  */
 export class ConfigurationError extends DatabaseError {
-  constructor(message, context) {
-    super(message, 'CONFIGURATION_ERROR', context);
+  constructor(message, context, originalError) {
+    super(message, 'CONFIGURATION_ERROR', 400, context, originalError);
     this.name = 'ConfigurationError';
   }
 }
 
 /**
  * Thrown when attempting to acquire a connection and the pool is exhausted.
+ * HTTP Status: 503 Service Unavailable
  */
 export class PoolExhaustedError extends DatabaseError {
-  constructor(message, context) {
-    super(message, 'POOL_EXHAUSTED', context);
+  constructor(message, context, originalError) {
+    super(message, 'POOL_EXHAUSTED', 503, context, originalError);
     this.name = 'PoolExhaustedError';
   }
 }
 
 /**
  * Thrown when attempting to use a database that is not configured.
+ * HTTP Status: 400 Bad Request
  */
 export class DatabaseNotFoundError extends DatabaseError {
-  constructor(databaseName, context) {
+  constructor(databaseName, context = {}, originalError = null) {
     super(
       `Database '${databaseName}' is not configured`,
       'DATABASE_NOT_FOUND',
-      { ...context, databaseName }
+      400,
+      { ...context, databaseName },
+      originalError
     );
     this.name = 'DatabaseNotFoundError';
   }
@@ -106,16 +120,77 @@ export class DatabaseNotFoundError extends DatabaseError {
 
 /**
  * Thrown when a transaction operation fails (commit, rollback, begin).
+ * HTTP Status: 500 Internal Server Error
  */
 export class TransactionError extends DatabaseError {
-  constructor(message, context) {
-    super(message, 'TRANSACTION_ERROR', context);
+  constructor(message, context, originalError) {
+    super(message, 'TRANSACTION_ERROR', 500, context, originalError);
     this.name = 'TransactionError';
   }
 }
+
+/**
+ * Thrown when user lacks required database permissions.
+ * HTTP Status: 403 Forbidden
+ */
+export class PermissionError extends DatabaseError {
+  constructor(message, context, originalError) {
+    super(message, 'PERMISSION_DENIED', 403, context, originalError);
+    this.name = 'PermissionError';
+  }
+}
+
+/**
+ * Thrown when an unexpected error occurs in the database driver.
+ * HTTP Status: 500 Internal Server Error
+ */
+export class InternalDatabaseError extends DatabaseError {
+  constructor(message, context, originalError) {
+    super(message, 'INTERNAL_DATABASE_ERROR', 500, context, originalError);
+    this.name = 'InternalDatabaseError';
+  }
+}
+
+/**
+ * Helper: Check if an error is a database error.
+ * @param {Error} err - Error to check
+ * @returns {boolean} True if err is instanceof DatabaseError
+ */
+export function isDatabaseError(err) {
+  return err instanceof DatabaseError;
+}
+
+/**
+ * Helper: Check if an error is a client error (4xx).
+ * Client errors are programmer mistakes; no retry will help.
+ * @param {Error} err - Error to check
+ * @returns {boolean} True if statusCode is 4xx
+ */
+export function isClientError(err) {
+  return isDatabaseError(err) && err.statusCode >= 400 && err.statusCode < 500;
+}
+
+/**
+ * Helper: Check if an error is a server error (5xx).
+ * Server errors are infrastructure problems; may be transient.
+ * @param {Error} err - Error to check
+ * @returns {boolean} True if statusCode is 5xx
+ */
+export function isServerError(err) {
+  return isDatabaseError(err) && err.statusCode >= 500 && err.statusCode < 600;
+}
 ```
 
-### Error Context Information
+**Key Points**:
+- All errors extend `Error` with `statusCode` for Express middleware compatibility
+- **4xx errors** (QueryError, ConfigurationError, etc.): Programming mistakes—don't retry
+- **5xx errors** (ConnectionError, QueryTimeoutError, etc.): Infrastructure problems—may be transient
+- Include `context` with debugging information (but not sensitive credentials)
+- Include `originalError` to preserve stack traces from underlying driver
+
+**For comprehensive error handling patterns, logging strategies, and Express integration examples, see [ERROR_HANDLING.md](../ERROR_HANDLING.md)**.
+
+### 1.2 Error Context Information
 
 When throwing errors, include context for debugging:
 
@@ -128,51 +203,56 @@ throw new ConnectionError(
     server: 'localhost',
     database: 'myapp',
     attempt: 3,
-    lastError: originalError.message,
-    duration: 5000 // ms
-  }
+    lastError: originalError.message
+  },
+  originalError
 );
 
-// Example: QueryTimeoutError with context
-throw new QueryTimeoutError(
-  'Query exceeded timeout',
+// Example: QueryError with context
+throw new QueryError(
+  'Column "email" does not exist',
   {
     databaseName: 'default',
-    sql: 'SELECT * FROM users WHERE...',
-    timeoutMs: 30000,
-    duration: 35000 // ms
+    sql: 'SELECT email FROM users WHERE id = ?',
+    table: 'users'
   }
 );
 ```
 
-### Error Handling in Adapters
+### 1.3 Interface Definitions
 
-Adapters should:
-1. Catch backend-specific errors
-2. Translate them to appropriate `DatabaseError` subclasses
-3. Include original error details in context
-4. Log errors appropriately
+Create `src/database/interface.js` with interface contracts that all adapters must implement.
 
-```javascript
-// Example in SQLite adapter
-try {
-  const stmt = db.prepare(sql);
-  return stmt.all(...params);
-} catch (err) {
-  if (err.message.includes('SQLITE_READONLY')) {
-    throw new QueryError('Database is read-only', {
-      databaseName: this.databaseName,
-      originalError: err.message,
-      sql
-    });
-  }
-  throw new QueryError(`Query failed: ${err.message}`, {
-    databaseName: this.databaseName,
-    originalError: err.message,
-    sql
-  });
-}
-```
+**Core Interfaces**:
+
+**IDatabase** - Main database client interface:
+- `query(sql, params, databaseName)` - SELECT queries
+- `execute(sql, params, databaseName)` - INSERT/UPDATE/DELETE
+- `getConnection(databaseName)` - Get connection from pool
+- `releaseConnection(connection)` - Release connection to pool
+- `beginTransaction(connection)` - Start a transaction
+- `isHealthy()` - Check database availability
+- `getStatus()` - Get detailed status
+- `close()` - Cleanup and shutdown
+
+**IConnection** - Manual connection management:
+- `query(sql, params)` - SELECT on specific connection
+- `execute(sql, params)` - INSERT/UPDATE/DELETE on specific connection
+- `release()` - Return to pool
+
+**ITransaction** - Transaction management:
+- `query(sql, params)` - SELECT within transaction
+- `execute(sql, params)` - INSERT/UPDATE/DELETE within transaction
+- `commit()` - Commit transaction
+- `rollback()` - Rollback transaction
+
+**Supporting Types**:
+- `ResultSet` - Array of row objects from queries
+- `ExecutionResult` - Result with rowsAffected, lastInsertRowid, recordsets (for procedures)
+- `OutputParameter` - For MSSQL OUTPUT parameters in stored procedures
+- `QueryParams` - Array or object of query parameters
+
+See [src/database/interface.js](../../src/database/interface.js) for complete JSDoc and examples.
 
 ---
 
@@ -909,45 +989,33 @@ Use this checklist to track Phase 1 progress:
 
 ### Week 1
 
-- [ ] **Day 1: Setup & Errors**
-  - [ ] Create error hierarchy in `errors.js`
-  - [ ] Write tests for all error types
-  - [ ] Create validation schema in `validation.js`
-  - [ ] Write tests for validation
+- [x] **Phase 1 Item 1: Interfaces & Error Handling (Days 1-2)** ✅ COMPLETE
+  - [x] Create error hierarchy in `src/database/errors.js` (9 error classes + helpers)
+  - [x] Create interface definitions in `src/database/interface.js` (IDatabase, IConnection, ITransaction)
+  - [x] Write comprehensive JSDoc for all interfaces and errors
+  - [x] Create documentation: DATABASE_ARCHITECTURE.md, ERROR_HANDLING.md
+  - [x] Verify ESLint passes
 
-- [ ] **Day 2: Interfaces**
-  - [ ] Create interface definitions in `interface.js`
-  - [ ] Write comprehensive JSDoc
-  - [ ] Create placeholder test file
-  - [ ] Verify ESLint passes
-
-- [ ] **Day 3-4: SQLite Adapter**
-  - [ ] Implement `adapters/sqlite.js`
-  - [ ] Implement `query()` method
-  - [ ] Implement `execute()` method
+- [ ] **Phase 1 Item 2: SQLite Adapter (Days 3-4)**
+  - [ ] Implement `src/database/adapters/sqlite.js`
+  - [ ] Implement `query()` method with parameter support
+  - [ ] Implement `execute()` method with rowsAffected
   - [ ] Implement `getConnection()` and `releaseConnection()`
-  - [ ] Implement `beginTransaction()`
-  - [ ] Implement health check methods
-  - [ ] Write adapter tests
+  - [ ] Implement `beginTransaction()` for transactions
+  - [ ] Implement `isHealthy()` and `getStatus()` methods
+  - [ ] Write comprehensive adapter tests
+  - [ ] Achieve 90%+ code coverage for adapter
 
-- [ ] **Day 5: Connection Manager & Factory**
-  - [ ] Implement `connection-manager.js`
-  - [ ] Implement `index.js` factory
+- [ ] **Phase 1 Item 3: Connection Manager & Factory (Day 5)**
+  - [ ] Implement `src/database/connection-manager.js` (pool singleton per database)
+  - [ ] Implement `src/database/index.js` factory function
   - [ ] Write integration tests
-  - [ ] Verify all error cases handled
-  - [ ] Achieve 90%+ code coverage
+  - [ ] Verify all error cases handled correctly
+  - [ ] Achieve 90%+ overall code coverage
 
 - [ ] **End of Week**
-  - [ ] All tests passing
-  - [ ] Code coverage 90%+
-  - [ ] ESLint clean
-  - [ ] Create pull request for review
-
----
-
-## Next Steps
-
-After Phase 1 completion:
+  - [ ] All tests passing (unit + integration)
+  - [ ] Code coverage 90%+ (statements, branches, functions, lines)
 - Phase 2: MSSQL Adapter implementation
 - Phase 3: Integration with `createApiApp()`
 - Phase 4: Production hardening

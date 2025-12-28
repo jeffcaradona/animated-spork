@@ -1,20 +1,40 @@
 {
   "name": "@animated-spork/api-core",
   "version": "0.0.1",
-  "description": "API core utilities and middleware",
+  "description": "API core utilities, middleware, and database abstraction",
   "type": "module",
-  "main": "app.js",
+  "main": "src/app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha --recursive \"tests/**/*.spec.js\" --exit",
+    "test:watch": "mocha --recursive \"tests/**/*.spec.js\" --exit --watch",
+    "coverage": "c8 --report-dir=coverage --reporter=lcov --reporter=text-summary mocha --recursive \"tests/**/*.spec.js\" --exit"
   },
-  "exports": "./src/app.js",
+  "exports": {
+    ".": "./src/app.js",
+    "./database": "./src/database/index.js",
+    "./database/errors": "./src/database/errors.js"
+  },
   "engines": {
-    "node": ">=22.5.0"
+    "node": ">=20.0.0"
   },
-  "keywords": [],
+  "keywords": [
+    "express",
+    "api",
+    "database",
+    "mssql",
+    "sqlite"
+  ],
   "author": "Jeff Caradona <jeffcaradona@gmail.com>",
   "license": "ISC",
   "dependencies": {
     "express": "^5.2.1"
+  },
+  "peerDependencies": {
+    "mssql": "^11.0.0"
+  },
+  "peerDependenciesMeta": {
+    "mssql": {
+      "optional": true
+    }
   }
 }
