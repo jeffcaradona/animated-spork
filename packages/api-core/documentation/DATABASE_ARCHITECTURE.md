@@ -27,50 +27,40 @@ This design enables:
 
 ### 1. Database Abstraction Interface
 
-**Location**: `src/database/interface.js`
+**Location**: `src/database/interface.js` ✅ COMPLETE
 
-Defines the contract that all database adapters must implement:
-
-```
-IDatabase {
-  // Core operations
-  query(sql, params) → Promise<ResultSet[]>
-  execute(sql, params) → Promise<ExecutionResult>
-  
-  // Connection management
-  getConnection(databaseName?) → Promise<IConnection>
-  releaseConnection(connection) → Promise<void>
-  
-  // Transactions
-  beginTransaction(connection?) → Promise<ITransaction>
-  
-  // Health/status
-  isHealthy() → Promise<boolean>
-  getStatus() → Promise<DatabaseStatus>
-  
-  // Cleanup
-  close() → Promise<void>
-}
-
-IConnection {
-  query(sql, params) → Promise<ResultSet[]>
-  execute(sql, params) → Promise<ExecutionResult>
-  release() → Promise<void>
-}
-
-ITransaction {
-  query(sql, params) → Promise<ResultSet[]>
-  execute(sql, params) → Promise<ExecutionResult>
-  commit() → Promise<void>
-  rollback() → Promise<void>
-}
-```
+Defines the contract that all database adapters must implement. Full JSDoc with examples in [interface.js](../../src/database/interface.js).
 
 ---
 
-### 2. Connection Manager
+### 2. Error Handling
 
-**Location**: `src/database/connection-manager.js`
+**Location**: `src/database/errors.js` ✅ COMPLETE
+
+Custom error hierarchy with Express middleware compatibility:
+
+- **DatabaseError** (base class) - All database errors extend this
+- **ConnectionError** (503) - Connection failures
+- **QueryTimeoutError** (504) - Query timeout
+- **QueryError** (400) - Invalid SQL or execution failure
+- **ConfigurationError** (400) - Invalid configuration
+- **PoolExhaustedError** (503) - No available connections
+- **DatabaseNotFoundError** (400) - Unknown database name
+- **TransactionError** (500) - Transaction operation failure
+- **PermissionError** (403) - Insufficient permissions
+- **InternalDatabaseError** (500) - Driver/database error
+
+All errors include `statusCode` for Express middleware routing and `context` for debugging without exposing credentials.
+
+Helper functions: `isDatabaseError()`, `isClientError()`, `isServerError()`
+
+**For comprehensive error handling patterns and Express integration, see [ERROR_HANDLING.md](ERROR_HANDLING.md)**.
+
+---
+
+### 3. Connection Manager
+
+**Location**: `src/database/connection-manager.js` (Phase 1 Item 3)
 
 Central manager for all database connections. Handles:
 
@@ -547,10 +537,24 @@ packages/api-core/
 ## Implementation Phases
 
 ### Phase 1: Database Abstraction (Week 1)
-- [ ] Define IDatabase, IConnection, ITransaction interfaces
-- [ ] Implement SQLite adapter with basic CRUD operations
-- [ ] Implement connection manager
-- [ ] Create factory function `createDatabaseClient()`
+
+**Phase 1 Item 1: Interfaces & Error Handling** ✅ COMPLETE
+- [x] Define IDatabase, IConnection, ITransaction interfaces in `src/database/interface.js`
+- [x] Implement error hierarchy with HTTP status codes in `src/database/errors.js`
+- [x] Create comprehensive documentation (PHASE_1_GUIDE.md, ERROR_HANDLING.md)
+- [x] Verify all code passes ESLint
+
+**Phase 1 Item 2: SQLite Adapter** (Days 3-4)
+- [ ] Implement `src/database/adapters/sqlite.js`
+- [ ] Implement connection acquisition and release
+- [ ] Implement transaction management
+- [ ] Write comprehensive tests
+
+**Phase 1 Item 3: Connection Manager & Factory** (Day 5)
+- [ ] Implement `src/database/connection-manager.js` (pool singletons)
+- [ ] Create factory function `createDatabaseClient()` in `src/database/index.js`
+- [ ] Write integration tests
+- [ ] Achieve 90%+ code coverage
 
 ### Phase 2: MSSQL Adapter (Week 2)
 - [ ] Create MSSQL adapter reference implementation
@@ -581,6 +585,163 @@ packages/api-core/
 5. **Opinionated pooling**: MSSQL defaults follow best practices
 6. **Connection pool singletons**: Each named MSSQL database maintains exactly one pool for application lifetime, preventing resource exhaustion and ensuring consistent query queuing
 7. **Separation of concerns**: Database layer is independent of HTTP/Express layer
+8. **Stored procedures first**: MSSQL stored procedures with chained input/output parameters are the primary data access pattern
+9. **Error-first design**: All errors extend Error with statusCode for Express middleware; client errors (4xx) vs server errors (5xx) clearly distinguished
+10. **OOP/functional hybrid**: Interfaces document contracts; factory functions provide composition; Error inheritance for idiomatic JavaScript
+
+---
+
+## MSSQL Stored Procedure Support
+
+### First-Class Citizen
+
+The api-core database layer is designed with **MSSQL stored procedures as the primary data access pattern**. While `query()` and `execute()` support ad-hoc SQL for flexibility and testing, production applications should leverage stored procedures for:
+
+- **Performance**: Compiled execution plans, reduced network round-trips
+- **Security**: Parameterized by design, reduced SQL injection surface
+- **Maintainability**: Business logic in the database, versioned with schema
+- **Separation of concerns**: API handles HTTP, database handles data logic
+
+### Chained Input/Output Parameters
+
+MSSQL stored procedures with **named parameters** and **OUTPUT chaining** work natively—no string manipulation or parameter rewriting:
+
+```javascript
+// MSSQL adapter passes parameters directly to mssql package
+// Full support for INPUT, OUTPUT, and INPUT/OUTPUT parameters
+
+// Example: Create user and return generated ID via OUTPUT
+const result = await db.execute(
+  'EXEC usp_CreateUser @name = @name, @email = @email, @userId = @userId OUTPUT',
+  { 
+    name: 'Alice', 
+    email: 'alice@example.com',
+    userId: { type: 'INT', output: true }  // OUTPUT parameter
+  }
+);
+console.log(`Created user ID: ${result.output.userId}`);
+
+// Example: Transfer funds with multiple OUTPUT values
+const result = await db.execute(
+  `EXEC usp_TransferFunds 
+     @fromAccount = @fromAccount, 
+     @toAccount = @toAccount, 
+     @amount = @amount,
+     @newFromBalance = @newFromBalance OUTPUT,
+     @newToBalance = @newToBalance OUTPUT,
+     @transactionId = @transactionId OUTPUT`,
+  {
+    fromAccount: 1001,
+    toAccount: 1002,
+    amount: 250.00,
+    newFromBalance: { type: 'DECIMAL', output: true },
+    newToBalance: { type: 'DECIMAL', output: true },
+    transactionId: { type: 'UNIQUEIDENTIFIER', output: true }
+  }
+);
+console.log(`Transfer ${result.output.transactionId} complete`);
+console.log(`From balance: ${result.output.newFromBalance}`);
+console.log(`To balance: ${result.output.newToBalance}`);
+
+// Example: Stored procedure returning multiple result sets
+const result = await db.execute(
+  'EXEC usp_GetUserDashboard @userId = @userId',
+  { userId: 123 }
+);
+// result.recordsets[0] = user profile
+// result.recordsets[1] = recent orders
+// result.recordsets[2] = notifications
+```
+
+### Parameter Types
+
+The MSSQL adapter supports all SQL Server data types for parameters:
+
+| Type | JavaScript | Notes |
+|------|------------|-------|
+| `INT`, `BIGINT` | `number` | Integer values |
+| `DECIMAL`, `MONEY` | `number` | Decimal values |
+| `VARCHAR`, `NVARCHAR` | `string` | Text (NVARCHAR for Unicode) |
+| `BIT` | `boolean` | True/false |
+| `DATETIME`, `DATE` | `Date` or `string` | ISO 8601 strings accepted |
+| `UNIQUEIDENTIFIER` | `string` | UUID/GUID format |
+| `VARBINARY` | `Buffer` | Binary data |
+| `TABLE` | `Array<object>` | Table-valued parameters |
+
+### OUTPUT Parameter Syntax
+
+```javascript
+// Simple OUTPUT (type inferred from stored procedure)
+{ paramName: { output: true } }
+
+// Explicit type OUTPUT
+{ paramName: { type: 'INT', output: true } }
+
+// INPUT/OUTPUT (provide value, receive modified value)
+{ paramName: { type: 'INT', value: 100, output: true } }
+```
+
+### SQLite Equivalent: Pseudo-Procedures
+
+For development and testing with SQLite, create JavaScript modules that mirror stored procedure behavior:
+
+```javascript
+// src/database/procedures/usp_CreateUser.js
+/**
+ * Pseudo stored procedure: Create user with audit logging
+ * Mirrors MSSQL usp_CreateUser behavior for SQLite testing
+ * 
+ * @param {IDatabase} db - Database client
+ * @param {object} params - Named parameters matching MSSQL signature
+ * @param {string} params.name - User name
+ * @param {string} params.email - User email
+ * @returns {Promise<{output: {userId: number}}>}
+ */
+export async function usp_CreateUser(db, { name, email }) {
+  const txn = await db.beginTransaction();
+  
+  try {
+    const userResult = await txn.execute(
+      'INSERT INTO users (name, email, created_at) VALUES (?, ?, ?)',
+      [name, email, new Date().toISOString()]
+    );
+    
+    const userId = userResult.lastInsertRowid;
+    
+    await txn.execute(
+      'INSERT INTO audit_log (entity_type, entity_id, action, created_at) VALUES (?, ?, ?, ?)',
+      ['user', userId, 'created', new Date().toISOString()]
+    );
+    
+    await txn.commit();
+    
+    return {
+      output: { userId },
+      recordset: [{ userId, name, email }]
+    };
+  } catch (err) {
+    await txn.rollback();
+    throw err;
+  }
+}
+```
+
+```javascript
+// Usage in tests (SQLite)
+import { usp_CreateUser } from './database/procedures/usp_CreateUser.js';
+
+const result = await usp_CreateUser(db, { name: 'Alice', email: 'alice@example.com' });
+console.log(`Created user ID: ${result.output.userId}`);
+```
+
+### Why This Matters
+
+Developers familiar with MSSQL stored procedures can:
+
+1. **Use familiar patterns** - Named parameters, OUTPUT chaining, multiple result sets
+2. **No performance penalty** - Parameters pass directly to `mssql` package, no string manipulation
+3. **Test without MSSQL** - Pseudo-procedures in SQLite mirror production behavior
+4. **Gradual migration** - Start with pseudo-procedures, deploy with real stored procedures
 
 ---
 
