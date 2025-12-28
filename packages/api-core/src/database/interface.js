@@ -164,8 +164,8 @@ export class IDatabase {
    * // Query against named database
    * const reports = await db.query('SELECT * FROM reports', [], 'reporting');
    */
+  // eslint-disable-next-line no-unused-vars
   async query(sql, params = [], databaseName = 'default') {
-    void sql; void params; void databaseName;
     throw new Error('IDatabase.query() must be implemented by adapter');
   }
 
@@ -246,8 +246,8 @@ export class IDatabase {
    * const orders = result.recordsets[1];       // Recent orders
    * const notifications = result.recordsets[2]; // Notifications
    */
+  // eslint-disable-next-line no-unused-vars
   async execute(sql, params = [], databaseName = 'default') {
-    void sql; void params; void databaseName;
     throw new Error('IDatabase.execute() must be implemented by adapter');
   }
 
@@ -287,8 +287,8 @@ export class IDatabase {
    *   await reportingConn.release();
    * }
    */
+  // eslint-disable-next-line no-unused-vars
   async getConnection(databaseName = 'default') {
-    void databaseName;
     throw new Error('IDatabase.getConnection() must be implemented by adapter');
   }
 
@@ -309,8 +309,8 @@ export class IDatabase {
    *   await db.releaseConnection(conn);
    * }
    */
+  // eslint-disable-next-line no-unused-vars
   async releaseConnection(connection) {
-    void connection;
     throw new Error('IDatabase.releaseConnection() must be implemented by adapter');
   }
 
@@ -357,8 +357,8 @@ export class IDatabase {
    *   await conn.release();
    * }
    */
+  // eslint-disable-next-line no-unused-vars
   async beginTransaction(connection, databaseName = 'default') {
-    void connection; void databaseName;
     throw new Error('IDatabase.beginTransaction() must be implemented by adapter');
   }
 
@@ -475,8 +475,8 @@ export class IConnection {
    * const users = await conn.query('SELECT * FROM users WHERE active = ?', [true]);
    * await conn.release();
    */
+  // eslint-disable-next-line no-unused-vars
   async query(sql, params = []) {
-    void sql; void params;
     throw new Error('IConnection.query() must be implemented by adapter');
   }
 
@@ -500,8 +500,8 @@ export class IConnection {
    * console.log(`Updated ${result.rowsAffected} user(s)`);
    * await conn.release();
    */
+  // eslint-disable-next-line no-unused-vars
   async execute(sql, params = []) {
-    void sql; void params;
     throw new Error('IConnection.execute() must be implemented by adapter');
   }
 
@@ -553,8 +553,8 @@ export class ITransaction {
    * const user = await txn.query('SELECT * FROM users WHERE id = ?', [123]);
    * await txn.commit();
    */
+  // eslint-disable-next-line no-unused-vars
   async query(sql, params = []) {
-    void sql; void params;
     throw new Error('ITransaction.query() must be implemented by adapter');
   }
 
@@ -576,8 +576,8 @@ export class ITransaction {
    * await txn.execute('INSERT INTO audit_log (action) VALUES (?)', ['user_created']);
    * await txn.commit();
    */
+  // eslint-disable-next-line no-unused-vars
   async execute(sql, params = []) {
-    void sql; void params;
     throw new Error('ITransaction.execute() must be implemented by adapter');
   }
 
