@@ -310,7 +310,7 @@ describe('Database Errors', () => {
         duration: 5000,
         lastError: 'Connection timeout'
       };
-
+ 
       const err = new ConnectionError('Failed to connect', context);
       
       expect(err.context).to.deep.equal(context);
