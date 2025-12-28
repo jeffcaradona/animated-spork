@@ -8,7 +8,7 @@ on:
       - 'packages/api-core/**'
       - '.github/workflows/sonarcloud-api-core-scan.yml'
   pull_request:
-    types: [opened, synchronize, reopened]
+    types: [opened, synchronize, reopened]  
     paths:
       - 'packages/api-core/**'
 
