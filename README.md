@@ -160,6 +160,7 @@ This is a personal project by [@jeffcaradona](https://github.com/jeffcaradona). 
 - **Implementation Plan**: [PHASES.md](./documentation/PHASES.md)
 - **Progress Tracking**: [MILESTONES.md](./documentation/MILESTONES.md)
 - **Getting Started**: [DEVELOPMENT_GUIDE.md](./documentation/DEVELOPMENT_GUIDE.md)
+- **Security Scanning**: [SNYK_SETUP.md](./documentation/SNYK_SETUP.md) - Snyk integration setup
 
 ## 📝 License
 
