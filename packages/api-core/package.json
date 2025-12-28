@@ -9,7 +9,7 @@
   },
   "exports": "./src/app.js",
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=22.5.0"
   },
   "keywords": [],
   "author": "Jeff Caradona <jeffcaradona@gmail.com>",
