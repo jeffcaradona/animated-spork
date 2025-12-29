@@ -21,6 +21,11 @@ import logger from './logger.js';
  * Attempts to use the logger if available, falls back to console.error if logger fails
  * This prevents infinite loops or cascading errors during initialization
  *
+ * Note: The inner catch block (console.error fallback) is difficult to test in unit tests
+ * because it requires making logger.error throw. ESM module caching makes it hard to
+ * retroactively stub module-level imports. This is tested implicitly through integration tests
+ * and manual testing. The code path itself is straightforward and defensive.
+ *
  * @param {string} pkgPath - Path to the package.json that failed to read
  * @param {Error} err - The error that occurred during read
  */
