@@ -15,23 +15,19 @@ import path from 'node:path';
 import logger from './logger.js';
 
 /**
- * reportPackageJsonError(pkgPath, err)
+ * reportPackageJsonError(pkgPath, err, loggerInstance)
  * Helper to report package.json read errors with fallback to console
  *
  * Attempts to use the logger if available, falls back to console.error if logger fails
  * This prevents infinite loops or cascading errors during initialization
  *
- * Note: The inner catch block (console.error fallback) is difficult to test in unit tests
- * because it requires making logger.error throw. ESM module caching makes it hard to
- * retroactively stub module-level imports. This is tested implicitly through integration tests
- * and manual testing. The code path itself is straightforward and defensive.
- *
  * @param {string} pkgPath - Path to the package.json that failed to read
  * @param {Error} err - The error that occurred during read
+ * @param {object} [loggerInstance] - Optional logger for testing; defaults to imported logger
  */
-function reportPackageJsonError(pkgPath, err) {
+function reportPackageJsonError(pkgPath, err, loggerInstance = logger) {
     try {
-        logger.error(`Failed to read package.json at ${pkgPath}: ${String(err)}`);
+        loggerInstance.error(`Failed to read package.json at ${pkgPath}: ${String(err)}`);
     } catch (error_) {
         // If logger isn't available yet for any reason, fallback to globalThis.console.error
         // This prevents infinite loops or missing context in error reporting
@@ -123,5 +119,8 @@ export function createDebugger({ name, namespaceSuffix } = {}) {
     // Return a debug instance for this namespace
     return debug(ns);
 }
+
+// Export for testing purposes - allows tests to inject a mock logger
+export { reportPackageJsonError };
 
 export default createDebugger;

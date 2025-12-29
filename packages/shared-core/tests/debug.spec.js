@@ -266,4 +266,37 @@ describe('debug module', () => {
             globalThis.process.cwd.restore();
         }
     });
+
+    /**
+     * Test 10: Verify console.error fallback when mock logger throws
+     * Purpose: Test the inner catch block in reportPackageJsonError
+     * Approach: Call reportPackageJsonError with a mock logger that throws
+     */
+    it('calls console.error when logger.error throws', async () => {
+        const debugPath = path.resolve(__dirname, '../src/debug.js');
+        const { reportPackageJsonError } = await importFresh(debugPath);
+
+        // Create a mock logger that throws when error() is called
+        const mockLogger = {
+            error: sandbox.stub().throws(new Error('Logger unavailable'))
+        };
+
+        // Spy on console.error
+        sandbox.spy(globalThis.console, 'error');
+
+        const testErr = new Error('Test error');
+        const testPath = '/test/path/package.json';
+
+        try {
+            // Call reportPackageJsonError with the mock logger that throws
+            reportPackageJsonError(testPath, testErr, mockLogger);
+
+            // Verify console.error WAS called as the fallback
+            expect(globalThis.console.error.called).to.be.true;
+            const errorCall = globalThis.console.error.getCall(0);
+            expect(errorCall.args[0]).to.include('Failed to read package.json');
+        } finally {
+            // Stubs cleaned up by afterEach
+        }
+    });
 });
