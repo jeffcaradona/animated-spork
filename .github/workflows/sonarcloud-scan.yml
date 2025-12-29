@@ -1,30 +1,29 @@
-name: SonarCloud api-core Test and Scan
+name: SonarCloud Test and Scan
 
 on:
   push:
     branches:
-      - feature/database_abstraction
-    paths:
-      - 'packages/api-core/**'
-      - '.github/workflows/sonarcloud-api-core-scan.yml'
+      - main
   pull_request:
-    types: [opened, synchronize, reopened]  
-    paths:
-      - 'packages/api-core/**'
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: read
 
 jobs:
   test-and-scan:
-    name: Test and SonarCloud Scan (api-core)
+    name: Test and SonarCloud Scan
     runs-on: ubuntu-latest
     
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6.0.1
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Shallow clones should be disabled for better relevancy of analysis
       
       - name: Setup Node.js
-        uses: actions/setup-node@v6.1.0
+        uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: 'npm'
@@ -32,12 +31,24 @@ jobs:
       - name: Install dependencies
         run: npm install --ignore-scripts
       
-      - name: Run tests and generate coverage for api-core
-        run: npm run coverage:api-core
+      - name: Run tests and generate coverage for all packages
+        run: |
+          npm run coverage:shared-core
+          npm run coverage:api-core
       
       - name: Normalize LCOV paths for monorepo
         run: |
           const fs = require('fs');
+          
+          // Normalize shared-core paths
+          const sharedCorePath = 'packages/shared-core/coverage/lcov.info';
+          if (fs.existsSync(sharedCorePath)) {
+            let content = fs.readFileSync(sharedCorePath, 'utf8');
+            content = content.replace(/\\/g, '/');
+            content = content.replace(/^SF:(?!packages\/)(.*)/gm, 'SF:packages/shared-core/$1');
+            fs.writeFileSync(sharedCorePath, content);
+            console.log('LCOV paths normalized for shared-core');
+          }
           
           // Normalize api-core paths
           const apiCorePath = 'packages/api-core/coverage/lcov.info';
@@ -51,7 +62,7 @@ jobs:
         shell: node {0}
       
       - name: SonarCloud Scan
-        uses: SonarSource/sonarqube-scan-action@v7.0.0
+        uses: SonarSource/sonarqube-scan-action@v5
         continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
