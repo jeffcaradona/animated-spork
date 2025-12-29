@@ -1,4 +1,4 @@
-name: SonarCloud Shared Core Scan
+name: SonarCloud shared-core Test and Scan
 
 on:
   push:
