@@ -16,8 +16,8 @@ A **reusable, package-based architecture** that provides:
 
 | Package | Status | Description |
 |---------|--------|-------------|
-| **[@animated-spork/shared-core](./packages/shared-core)** | 🟡 Phase 1 | Common utilities (logging, debugging; more to come) |
-| **[@animated-spork/api-core](./packages/api-core)** | 🔴 Planned | API server factory with JWT and MSSQL |
+| **[@animated-spork/shared-core](./packages/shared-core)** | ✅ Complete | Common utilities (logging, debugging) - 97.77% coverage |
+| **[@animated-spork/api-core](./packages/api-core)** | 🟡 Phase 1 | Database abstraction layer (SQLite/MSSQL) - 94.46% coverage |
 | **[@animated-spork/frontend-core](./packages/frontend-core)** | 🔴 Planned | Frontend server factory with OAuth and sessions |
 
 ## 🚀 Quick Start
@@ -30,6 +30,11 @@ npm install
 
 # Run tests
 npm run test:shared-core
+npm run test:api-core
+
+# Run with coverage
+npm run coverage:shared-core
+npm run coverage:api-core
 
 # Lint code
 npm run lint
@@ -52,11 +57,11 @@ npm run lint
   - Security model
   - Design decisions
 
-### Project Status (as of 2025-12-22)
+### Project Status (as of 2025-12-29)
 
 **Current Phase:** Phase 1 - Core Packages Implementation  
-**Progress:** 1/3 packages complete (shared-core ✅)  
-**Next Up:** api-core (JWT + MSSQL) or frontend-core (OAuth + sessions)
+**Progress:** 1.5/3 packages complete (shared-core ✅, api-core database layer ✅)  
+**Next Up:** api-core JWT/auth layer, then frontend-core
 
 See [MILESTONES.md](./documentation/MILESTONES.md) for detailed progress.
 
@@ -65,8 +70,8 @@ See [MILESTONES.md](./documentation/MILESTONES.md) for detailed progress.
 ```
 animated-spork/
 ├── packages/
-│   ├── shared-core/      # ✅ Common utilities (COMPLETE)
-│   ├── api-core/         # 🔴 API factory (planned)
+│   ├── shared-core/      # ✅ Common utilities (COMPLETE - 97.77% coverage)
+│   ├── api-core/         # 🟡 Database layer complete, JWT/auth pending
 │   └── frontend-core/    # 🔴 Frontend factory (planned)
 ├── apps/
 │   ├── demo-api/         # 🔴 Example API app (planned)
@@ -129,12 +134,12 @@ Import packages → Compose → Update package versions
 | Phase | Status | Progress |
 |-------|--------|----------|
 | Phase 0: Setup & Docs | ✅ Complete | 100% |
-| Phase 1: Core Packages | 🟡 In Progress | 33% (1/3 packages) |
+| Phase 1: Core Packages | 🟡 In Progress | 50% (1.5/3 packages) |
 | Phase 2: Demo Apps | 🔴 Not Started | 0% |
 | Phase 3: Documentation | 🔴 Not Started | 0% |
 | Phase 4: Production | 🔴 Not Started | 0% |
 
-**Overall Progress:** ~22% complete
+**Overall Progress:** ~30% complete
 
 ## 🛠️ Development
 
@@ -144,6 +149,8 @@ Import packages → Compose → Update package versions
 # Testing
 npm run test:shared-core          # Run shared-core tests
 npm run coverage:shared-core      # Run with coverage report
+npm run test:api-core             # Run api-core tests
+npm run coverage:api-core         # Run with coverage report
 
 # Linting
 npm run lint                      # Check all files
