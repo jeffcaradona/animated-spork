@@ -238,42 +238,48 @@ describe('Database Connection Manager', () => {
   });
 
   describe('shutdown', () => {
-    it('should close all databases on close()', async () => {
+    it("should close all databases on close()", async () => {
       db = await createDatabaseClient({
-        backend: 'sqlite',
+        backend: "sqlite",
         databases: {
-          default: { filename: ':memory:' },
-          secondary: { filename: ':memory:' }
-        }
+          default: { filename: ":memory:" },
+          secondary: { filename: ":memory:" },
+        },
       });
 
       // Create table and insert data
-      await db.execute('CREATE TABLE test (id INTEGER PRIMARY KEY)');
+      await db.execute("CREATE TABLE test (id INTEGER PRIMARY KEY)");
 
       // Close should complete without error
-      await db.close();
+      const closeResult = await db.close();
+      expect(closeResult).to.be.undefined;
       db = null;
 
       // Create new client to verify clean shutdown
       const newDb = await createDatabaseClient({
-        backend: 'sqlite',
-        databases: { default: { filename: ':memory:' } }
+        backend: "sqlite",
+        databases: { default: { filename: ":memory:" } },
       });
       await newDb.close();
     });
 
-    it('should stop health checks on close()', async () => {
+    it("should stop health checks on close()", async () => {
       db = await createDatabaseClient({
-        backend: 'sqlite',
-        databases: { default: { filename: ':memory:' } },
+        backend: "sqlite",
+        databases: { default: { filename: ":memory:" } },
         healthCheck: {
           enabled: true,
-          intervalMs: 60000 // Long interval so test completes quickly
-        }
+          intervalMs: 60000, // Long interval so test completes quickly
+        },
       });
 
+      // Verify health check is running before close
+      expect(db).to.be.an('object');
+      expect(db.isHealthy).to.be.a('function');
+
       // Close should stop health check timer
-      await db.close();
+      const closeResult = await db.close();
+      expect(closeResult).to.be.undefined;
       db = null;
     });
   });
