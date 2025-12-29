@@ -536,7 +536,7 @@ packages/api-core/
 
 ## Implementation Phases
 
-### Phase 1: Database Abstraction (Week 1)
+### Phase 1: Database Abstraction (Week 1) ✅ COMPLETE
 
 **Phase 1 Item 1: Interfaces & Error Handling** ✅ COMPLETE
 - [x] Define IDatabase, IConnection, ITransaction interfaces in `src/database/interface.js`
@@ -550,11 +550,12 @@ packages/api-core/
 - [x] Implement transaction management
 - [x] Write comprehensive tests (32 tests, 94.49% statement coverage)
 
-**Phase 1 Item 3: Connection Manager & Factory** (Day 5)
-- [ ] Implement `src/database/connection-manager.js` (pool singletons)
-- [ ] Create factory function `createDatabaseClient()` in `src/database/index.js`
-- [ ] Write integration tests
-- [ ] Achieve 90%+ code coverage
+**Phase 1 Item 3: Connection Manager & Factory** ✅ COMPLETE
+- [x] Implement `src/database/validation.js` (configuration validation)
+- [x] Implement `src/database/connection-manager.js` (backend-agnostic multi-database routing)
+- [x] Create factory function `createDatabaseClient()` in `src/database/index.js`
+- [x] Write integration tests (110 tests total, 94.46% statement coverage)
+- [x] Achieve 90%+ code coverage (94.46% statements, 92.47% branches, 98.11% functions)
 
 ### Phase 2: MSSQL Adapter (Week 2)
 - [ ] Create MSSQL adapter reference implementation
@@ -588,6 +589,31 @@ packages/api-core/
 8. **Stored procedures first**: MSSQL stored procedures with chained input/output parameters are the primary data access pattern
 9. **Error-first design**: All errors extend Error with statusCode for Express middleware; client errors (4xx) vs server errors (5xx) clearly distinguished
 10. **OOP/functional hybrid**: Interfaces document contracts; factory functions provide composition; Error inheritance for idiomatic JavaScript
+
+### Phase 1 Item 3: Connection Manager & Factory Design Decisions
+
+The following decisions were made for implementing the connection manager and factory function:
+
+11. **Validation module separation**: Configuration validation is implemented in a dedicated `src/database/validation.js` module rather than inline within the connection manager. This promotes:
+    - Single responsibility: Validation logic is isolated and testable
+    - Reusability: Validators can be called from factory, adapters, or CLI tools
+    - Clarity: Validation rules are documented in one place
+
+12. **Error propagation from adapters**: The factory function (`createDatabaseClient`) catches only configuration validation errors. Adapter initialization errors (connection failures, permission issues) propagate directly to the caller. This ensures:
+    - Clear error attribution: Errors identify their source (validation vs adapter)
+    - No error masking: Original stack traces and error types are preserved
+    - Consistent handling: All adapter errors follow the same error hierarchy
+
+13. **Opt-in health monitoring**: Periodic health checks (via `setInterval`) are opt-in via configuration (`healthCheck.enabled: true`). By default, no background tasks are started. This prevents:
+    - Test pollution: Unit tests don't have dangling timers
+    - Resource waste: Applications that don't need periodic checks don't pay for them
+    - Shutdown complexity: Fewer background processes to coordinate during cleanup
+
+14. **Backend-agnostic connection manager**: The connection manager delegates all pooling decisions to individual adapters. SQLite adapters manage database file handles directly; MSSQL adapters maintain pool singletons internally. The connection manager only:
+    - Routes requests to the correct named database
+    - Validates database names exist in configuration
+    - Coordinates shutdown across all adapters
+    - Exposes unified health/status aggregation
 
 ---
 
