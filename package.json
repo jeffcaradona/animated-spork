@@ -16,10 +16,12 @@
     "lint:fix": "eslint . --fix",
     "test": "echo \"Error: no test specified\" && exit 1",
     "test:shared-core": "mocha --recursive \"packages/shared-core/tests/**/*.spec.js\" --exit",
-    "coverage:shared-core": "c8 --report-dir=packages/shared-core/coverage --reporter=lcov --reporter=text-summary mocha --recursive \"packages/shared-core/tests/**/*.spec.js\" --exit"
+    "coverage:shared-core": "c8 --report-dir=packages/shared-core/coverage --reporter=lcov --reporter=text-summary mocha --recursive \"packages/shared-core/tests/**/*.spec.js\" --exit",
+    "test:api-core": "mocha --recursive \"packages/api-core/tests/**/*.spec.js\" --exit",
+    "coverage:api-core": "c8 --report-dir=packages/api-core/coverage --reporter=lcov --reporter=text-summary mocha --recursive \"packages/api-core/tests/**/*.spec.js\" --exit"
   },
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=22.0.0"
   },
   "keywords": [],
   "author": "Jeff Caradona <jeffcaradona@gmail.com>",

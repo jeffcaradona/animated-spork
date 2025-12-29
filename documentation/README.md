@@ -71,7 +71,7 @@ documentation/
   - Design decisions
 
 ---
-
+  
 ### "I want to learn how to develop"
 **Read these:**
 - [DEVELOPMENT_GUIDE.md](./DEVELOPMENT_GUIDE.md) - Complete development guide
