@@ -30,7 +30,7 @@ import logger from './logger.js';
  */
 function getAppNameFromPkg() {
     // Check for Node.js environment with access to process.cwd()
-    if (typeof globalThis.process !== 'undefined' && globalThis.process.cwd) {
+    if ( globalThis.process !== undefined && globalThis.process.cwd) {
         let pkgPath;
         try {
             pkgPath = path.join(globalThis.process.cwd(), 'package.json');
@@ -42,17 +42,23 @@ function getAppNameFromPkg() {
             // Attempt to log the error via the shared logger
             try {
                 logger.error(`Failed to read package.json at ${pkgPath}: ${String(err)}`);
-            } catch (logErr) {
+            } catch (error_) {
                 // If logger isn't available yet for any reason, fallback to globalThis.console.error
                 // This prevents infinite loops or missing context in error reporting
-                globalThis.console.error(`Failed to read package.json at ${pkgPath}:`, err, ' (logger error:', logErr, ')');
+                globalThis.console.error(
+                  `Failed to read package.json at ${pkgPath}:`,
+                  err,
+                  " (logger error:",
+                  error_,
+                  ")"
+                );
             }
         }
     }
 
     // Browser/runtime hook: allow app to set a global app name if package.json is unavailable
-    if (typeof globalThis !== 'undefined' && globalThis.__APP_NAME__) {
-        return globalThis.__APP_NAME__;
+    if (globalThis?.__APP_NAME__) {
+      return globalThis.__APP_NAME__;
     }
 
     return undefined;
@@ -87,10 +93,13 @@ export function createDebugger({ name, namespaceSuffix } = {}) {
     // Resolve the app name: explicit param, package.json, runtime hook, or fallback
     const appName = name || getAppNameFromPkg();
 
+    // Extract the namespace suffix into a separate statement to avoid nested ternary
+    const suffix = namespaceSuffix ? `:${namespaceSuffix}` : '';
+
     // Construct the debug namespace: 'name' or 'name:suffix' or fallback to 'animated-spork:shared-core'
     const ns = appName
-        ? `${appName}${namespaceSuffix ? `:${namespaceSuffix}` : ''}`
-        : (namespaceSuffix || 'animated-spork:shared-core');
+      ? `${appName}${suffix}`
+      : namespaceSuffix || "animated-spork:shared-core";
 
     // Return a debug instance for this namespace
     return debug(ns);
