@@ -1,5 +1,7 @@
 # api-core Database Architecture Plan
 
+**Status (as of 2025-12-29):** Phase 1 ✅ COMPLETE | Phases 2-4 🔴 PENDING
+
 ## Overview
 
 The api-core package provides a configurable database abstraction layer that supports multiple database backends. **MSSQL is the primary production backend** with opinionated connection pooling and multi-database support. **SQLite is used for development and testing** without requiring external dependencies.
@@ -557,19 +559,19 @@ packages/api-core/
 - [x] Write integration tests (110 tests total, 94.46% statement coverage)
 - [x] Achieve 90%+ code coverage (94.46% statements, 92.47% branches, 98.11% functions)
 
-### Phase 2: MSSQL Adapter (Week 2)
+### Phase 2: MSSQL Adapter (Week 2) 🔴 NOT STARTED
 - [ ] Create MSSQL adapter reference implementation
 - [ ] Implement connection pooling
 - [ ] Implement multi-database routing
 - [ ] Add stored procedure helpers
 
-### Phase 3: Integration & Testing (Week 3)
+### Phase 3: Integration & Testing (Week 3) 🔴 NOT STARTED
 - [ ] Integrate database client into `createApiApp()`
 - [ ] Write comprehensive test suite using SQLite
 - [ ] Add health check endpoints
 - [ ] Document configuration patterns
 
-### Phase 4: Production Readiness (Week 4)
+### Phase 4: Production Readiness (Week 4) 🔴 NOT STARTED
 - [ ] Finalize peer dependency handling
 - [ ] Error handling and retry logic
 - [ ] Documentation for implementers

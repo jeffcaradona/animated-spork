@@ -4,12 +4,17 @@ Shared core utilities and types for the animated-spork monorepo.
 
 ## Overview
 
-`shared-core` exports two main utilities:
+`shared-core` provides framework-agnostic utilities that are shared across all animated-spork packages (`api-core`, `frontend-core`) and demo applications.
 
-1. **`createDebugger`** — a factory for creating namespaced debug functions using the `debug` npm package
-2. **`createLogger` / `logger`** — a Winston-based logger factory and default logger instance for file and console output
+**Current Status (as of 2025-12-29):**
+- ✅ **Phase 1 Complete**: Logging and debugging utilities production-ready
+- 🔴 **Future additions**: Validation, types, and error utilities will be added as patterns emerge from api-core and frontend-core development
 
-Both are designed for use by `api-core` and `frontend-core` packages, which in turn are imported by demo apps.
+**Implemented utilities:**
+1. **`createDebugger`** - Factory for creating namespaced debug functions using the `debug` npm package
+2. **`createLogger` / `logger`** - Winston-based logger factory and default logger instance for file and console output
+
+**Test Coverage:** 97.77% statements, 82.14% branches, 80% functions
 
 ## Installation
 
@@ -106,10 +111,12 @@ This produces:
 - HTML detailed report in `coverage/index.html`
 
 **Current coverage:**
-- **Statements:** 90.35% (178/197)
-- **Functions:** 100% (3/3)
-- **Lines:** 90.35% (178/197)
-- **Branches:** 52.63% (edge cases in error handling)
+- **Statements:** 97.77% (220/225)
+- **Functions:** 80% (4/5)
+- **Lines:** 97.77% (220/225)
+- **Branches:** 82.14% (23/28)
+
+**Note:** The vault.js file is currently a stub (placeholder) and will be implemented in future phases as secure configuration management needs emerge.
 
 **Test Coverage:**
 - `tests/debug.spec.js` — tests for `createDebugger` namespace resolution and environment filtering
