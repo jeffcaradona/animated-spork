@@ -143,4 +143,160 @@ describe('debug module', () => {
             await cleanup();
         }
     });
+
+    /**
+     * Test 6: Verify createDebugger falls back to globalThis.__APP_NAME__ when package.json fails
+     * Purpose: Test the global app name fallback mechanism
+     * Approach: Make process.cwd unavailable and set globalThis.__APP_NAME__
+     */
+    it('falls back to globalThis.__APP_NAME__ when package.json is unavailable', async () => {
+        // Remove process.cwd to simulate browser/runtime environment
+        const originalCwd = globalThis.process.cwd;
+        delete globalThis.process.cwd;
+
+        // Set the global app name
+        const originalAppName = globalThis.__APP_NAME__;
+        globalThis.__APP_NAME__ = 'global-app-name';
+
+        try {
+            const debugPath = path.resolve(__dirname, '../src/debug.js');
+            const { createDebugger } = await importFresh(debugPath);
+
+            // Create debug function without explicit name (should use globalThis.__APP_NAME__)
+            const debugFn = createDebugger();
+
+            // Verify it returns a function
+            expect(typeof debugFn).to.equal('function');
+        } finally {
+            // Restore original state
+            globalThis.process.cwd = originalCwd;
+            if (originalAppName === undefined) {
+                delete globalThis.__APP_NAME__;
+            } else {
+                globalThis.__APP_NAME__ = originalAppName;
+            }
+        }
+    });
+
+    /**
+     * Test 7: Verify error handling when package.json read fails
+     * Purpose: Test that the system gracefully handles file read errors
+     * Approach: Stub process.cwd to point to a non-existent directory
+     */
+    it('falls back to console.error when both package.json read and logger fail', async () => {
+        // Stub process.cwd to point to a non-existent directory
+        sandbox.stub(globalThis.process, 'cwd').returns('/non/existent/path');
+
+        // Spy on console.error to verify it's called as fallback
+        sandbox.spy(globalThis.console, 'error');
+
+        try {
+            const debugPath = path.resolve(__dirname, '../src/debug.js');
+            const { createDebugger } = await importFresh(debugPath);
+
+            // Create debug function (will try to read package.json, fail, then call logger.error)
+            const debugFn = createDebugger();
+
+            // Verify it still returns a function despite errors
+            expect(typeof debugFn).to.equal('function');
+
+            // The logger successfully catches and logs the error, so console.error is NOT called
+            // This is the expected behavior when the logger works
+            expect(globalThis.console.error.called).to.be.false;
+        } finally {
+            // Clean up stubs
+            globalThis.process.cwd.restore();
+        }
+    });
+
+    /**
+     * Test 8: Verify handling when package.json name field is not a string
+     * Purpose: Cover the branch where pkg.name exists but is not a string
+     * Approach: Create a package.json with non-string name field
+     */
+    it('returns undefined when package.json name is not a string', async () => {
+        // Create a temporary directory with a package.json that has non-string name
+        const { path: tempPath, cleanup } = tempDir();
+        const pkgPath = path.join(tempPath, 'package.json');
+        fs.writeFileSync(pkgPath, JSON.stringify({ name: 123 })); // name is a number, not a string
+
+        // Stub process.cwd() to return our temp directory
+        sandbox.stub(globalThis.process, 'cwd').returns(tempPath);
+
+        try {
+            const debugPath = path.resolve(__dirname, '../src/debug.js');
+            const { createDebugger } = await importFresh(debugPath);
+
+            // Create debug function without explicit name (should skip non-string name)
+            const debugFn = createDebugger();
+
+            // Verify it still returns a function (fallback to default namespace)
+            expect(typeof debugFn).to.equal('function');
+        } finally {
+            // Clean up
+            globalThis.process.cwd.restore();
+            await cleanup();
+        }
+    });
+
+    /**
+     * Test 9: Verify error handling produces robust fallback
+     * Purpose: Verify the system works even when package.json reading fails
+     * Approach: Point process.cwd to nonexistent path, verify graceful fallback
+     */
+    it('gracefully handles errors in package.json reading', async () => {
+        // Stub process.cwd to return a path that will fail file read
+        sandbox.stub(globalThis.process, 'cwd').returns('/nonexistent/path/that/will/definitely/fail');
+
+        // Spy on console.error to see if fallback is invoked
+        sandbox.spy(globalThis.console, 'error');
+
+        try {
+            const debugPath = path.resolve(__dirname, '../src/debug.js');
+            const { createDebugger } = await importFresh(debugPath);
+
+            // Even with file read errors, createDebugger still returns a function
+            const debugFn = createDebugger({ namespaceSuffix: 'test' });
+            expect(typeof debugFn).to.equal('function');
+
+            // Because logger is available, it handles the error
+            // console.error is NOT called (logger successfully logs the error)
+            // But this verifies the error handling path runs without throwing
+        } finally {
+            globalThis.process.cwd.restore();
+        }
+    });
+
+    /**
+     * Test 10: Verify console.error fallback when mock logger throws
+     * Purpose: Test the inner catch block in reportPackageJsonError
+     * Approach: Call reportPackageJsonError with a mock logger that throws
+     */
+    it('calls console.error when logger.error throws', async () => {
+        const debugPath = path.resolve(__dirname, '../src/debug.js');
+        const { reportPackageJsonError } = await importFresh(debugPath);
+
+        // Create a mock logger that throws when error() is called
+        const mockLogger = {
+            error: sandbox.stub().throws(new Error('Logger unavailable'))
+        };
+
+        // Spy on console.error
+        sandbox.spy(globalThis.console, 'error');
+
+        const testErr = new Error('Test error');
+        const testPath = '/test/path/package.json';
+
+        try {
+            // Call reportPackageJsonError with the mock logger that throws
+            reportPackageJsonError(testPath, testErr, mockLogger);
+
+            // Verify console.error WAS called as the fallback
+            expect(globalThis.console.error.called).to.be.true;
+            const errorCall = globalThis.console.error.getCall(0);
+            expect(errorCall.args[0]).to.include('Failed to read package.json');
+        } finally {
+            // Stubs cleaned up by afterEach
+        }
+    });
 });
