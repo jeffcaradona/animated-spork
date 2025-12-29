@@ -208,4 +208,62 @@ describe('debug module', () => {
             globalThis.process.cwd.restore();
         }
     });
+
+    /**
+     * Test 8: Verify handling when package.json name field is not a string
+     * Purpose: Cover the branch where pkg.name exists but is not a string
+     * Approach: Create a package.json with non-string name field
+     */
+    it('returns undefined when package.json name is not a string', async () => {
+        // Create a temporary directory with a package.json that has non-string name
+        const { path: tempPath, cleanup } = tempDir();
+        const pkgPath = path.join(tempPath, 'package.json');
+        fs.writeFileSync(pkgPath, JSON.stringify({ name: 123 })); // name is a number, not a string
+
+        // Stub process.cwd() to return our temp directory
+        sandbox.stub(globalThis.process, 'cwd').returns(tempPath);
+
+        try {
+            const debugPath = path.resolve(__dirname, '../src/debug.js');
+            const { createDebugger } = await importFresh(debugPath);
+
+            // Create debug function without explicit name (should skip non-string name)
+            const debugFn = createDebugger();
+
+            // Verify it still returns a function (fallback to default namespace)
+            expect(typeof debugFn).to.equal('function');
+        } finally {
+            // Clean up
+            globalThis.process.cwd.restore();
+            await cleanup();
+        }
+    });
+
+    /**
+     * Test 9: Verify error handling produces robust fallback
+     * Purpose: Verify the system works even when package.json reading fails
+     * Approach: Point process.cwd to nonexistent path, verify graceful fallback
+     */
+    it('gracefully handles errors in package.json reading', async () => {
+        // Stub process.cwd to return a path that will fail file read
+        sandbox.stub(globalThis.process, 'cwd').returns('/nonexistent/path/that/will/definitely/fail');
+
+        // Spy on console.error to see if fallback is invoked
+        sandbox.spy(globalThis.console, 'error');
+
+        try {
+            const debugPath = path.resolve(__dirname, '../src/debug.js');
+            const { createDebugger } = await importFresh(debugPath);
+
+            // Even with file read errors, createDebugger still returns a function
+            const debugFn = createDebugger({ namespaceSuffix: 'test' });
+            expect(typeof debugFn).to.equal('function');
+
+            // Because logger is available, it handles the error
+            // console.error is NOT called (logger successfully logs the error)
+            // But this verifies the error handling path runs without throwing
+        } finally {
+            globalThis.process.cwd.restore();
+        }
+    });
 });

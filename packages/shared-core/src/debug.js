@@ -15,6 +15,32 @@ import path from 'node:path';
 import logger from './logger.js';
 
 /**
+ * reportPackageJsonError(pkgPath, err)
+ * Helper to report package.json read errors with fallback to console
+ *
+ * Attempts to use the logger if available, falls back to console.error if logger fails
+ * This prevents infinite loops or cascading errors during initialization
+ *
+ * @param {string} pkgPath - Path to the package.json that failed to read
+ * @param {Error} err - The error that occurred during read
+ */
+function reportPackageJsonError(pkgPath, err) {
+    try {
+        logger.error(`Failed to read package.json at ${pkgPath}: ${String(err)}`);
+    } catch (error_) {
+        // If logger isn't available yet for any reason, fallback to globalThis.console.error
+        // This prevents infinite loops or missing context in error reporting
+        globalThis.console.error(
+          `Failed to read package.json at ${pkgPath}:`,
+          err,
+          " (logger error:",
+          error_,
+          ")"
+        );
+    }
+}
+
+/**
  * getAppNameFromPkg()
  * Attempts to resolve the application name from the closest package.json file.
  *
@@ -40,19 +66,7 @@ function getAppNameFromPkg() {
             return typeof pkg.name === 'string' ? pkg.name : undefined;
         } catch (err) {
             // Attempt to log the error via the shared logger
-            try {
-                logger.error(`Failed to read package.json at ${pkgPath}: ${String(err)}`);
-            } catch (error_) {
-                // If logger isn't available yet for any reason, fallback to globalThis.console.error
-                // This prevents infinite loops or missing context in error reporting
-                globalThis.console.error(
-                  `Failed to read package.json at ${pkgPath}:`,
-                  err,
-                  " (logger error:",
-                  error_,
-                  ")"
-                );
-            }
+            reportPackageJsonError(pkgPath, err);
         }
     }
 
