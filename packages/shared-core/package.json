@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "debug": "^4.3.4",
+    "jsonwebtoken": "^9.0.3",
     "winston": "^3.19.0"
   },
   "engines": {

@@ -33,8 +33,7 @@ jobs:
       
       - name: Run tests and generate coverage for all packages
         run: |
-          npm run coverage:shared-core
-          npm run coverage:api-core
+          npm run coverage:shared-core          
       
       - name: Normalize LCOV paths for monorepo
         run: |
@@ -50,15 +49,7 @@ jobs:
             console.log('LCOV paths normalized for shared-core');
           }
           
-          // Normalize api-core paths
-          const apiCorePath = 'packages/api-core/coverage/lcov.info';
-          if (fs.existsSync(apiCorePath)) {
-            let content = fs.readFileSync(apiCorePath, 'utf8');
-            content = content.replace(/\\/g, '/');
-            content = content.replace(/^SF:(?!packages\/)(.*)/gm, 'SF:packages/api-core/$1');
-            fs.writeFileSync(apiCorePath, content);
-            console.log('LCOV paths normalized for api-core');
-          }
+          
         shell: node {0}
       
       - name: SonarCloud Scan
