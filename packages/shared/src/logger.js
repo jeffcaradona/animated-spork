@@ -56,7 +56,9 @@ export function createLogger({ name = path.basename(globalThis.process.cwd()) ||
     }
 
     // Construct the full path to the log file
-    const filename = path.join(baseLogDir, `${name}.log`);
+    // Sanitize filename: replace colons (reserved on Windows) with hyphens
+    const sanitizedName = name.replace(/:/g, '-');
+    const filename = path.join(baseLogDir, `${sanitizedName}.log`);
 
     // Create and configure the Winston logger with File and Console transports
     const logger = winston.createLogger({
@@ -83,16 +85,3 @@ export function createLogger({ name = path.basename(globalThis.process.cwd()) ||
     return logger;
 }
 
-/**
- * defaultLogger
- * A pre-configured Winston logger instance for immediate use.
- * Logs to process.cwd()/logs/<directory-name>.log with 'info' minimum level.
- *
- * Example:
- *   logger.info('App initialized');
- *   logger.error('An error occurred', { code: 'E001' });
- */
-const defaultLogger = createLogger();
-
-export { defaultLogger as logger };
-export default defaultLogger;

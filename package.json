@@ -5,21 +5,26 @@
   "private": true,
   "type": "module",
   "workspaces": [
-    "packages/shared-core"
+    "packages/shared",
+    "packages/app",
+    "dev-app"
   ],
   "scripts": {
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "test:shared-core": "mocha --recursive \"packages/shared-core/tests/**/*.spec.js\" --exit",
-    "coverage:shared-core": "c8 --report-dir=packages/shared-core/coverage --reporter=lcov --reporter=text-summary mocha --recursive \"packages/shared-core/tests/**/*.spec.js\" --exit"
+    "test": "npm run test:shared && npm run test:app",
+    "test:shared": "mocha --recursive \"packages/shared/tests/**/*.spec.js\" --exit",
+    "test:app": "mocha --recursive \"packages/app/tests/**/*.spec.js\" --exit",
+    "coverage:shared": "c8 --report-dir=packages/shared/coverage --reporter=lcov --reporter=text-summary mocha --recursive \"packages/shared/tests/**/*.spec.js\" --exit",
+    "coverage:app": "c8 --report-dir=packages/app/coverage --reporter=lcov --reporter=text-summary mocha --recursive \"packages/app/tests/**/*.spec.js\" --exit",
+    "coverage": "npm run coverage:shared && npm run coverage:app"
   },
   "engines": {
     "node": ">=22.0.0"
   },
   "keywords": [],
   "author": "Jeff Caradona <jeffcaradona@gmail.com>",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "@eslint/js": "^9.39.2",
     "c8": "^10.1.3",

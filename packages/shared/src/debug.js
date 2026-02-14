@@ -8,11 +8,10 @@
  *
  * Example: DEBUG=myapp:* node app.js
  */
-
 import debug from 'debug';
 import fs from 'node:fs';
 import path from 'node:path';
-import logger from './logger.js';
+import { createLogger } from './logger.js';
 
 /**
  * reportPackageJsonError(pkgPath, err, loggerInstance)
@@ -23,13 +22,18 @@ import logger from './logger.js';
  *
  * @param {string} pkgPath - Path to the package.json that failed to read
  * @param {Error} err - The error that occurred during read
- * @param {object} [loggerInstance] - Optional logger for testing; defaults to imported logger
+ * @param {object} [loggerInstance] - Optional logger for testing; defaults to a lazily-created logger
  */
-function reportPackageJsonError(pkgPath, err, loggerInstance = logger) {
+function reportPackageJsonError(pkgPath, err, loggerInstance) {
+    let logger = loggerInstance;
     try {
-        loggerInstance.error(`Failed to read package.json at ${pkgPath}: ${String(err)}`);
+        // Create logger on demand if not provided (for testing/injection)
+        if (!logger) {
+            logger = createLogger();
+        }
+        logger.error(`Failed to read package.json at ${pkgPath}: ${String(err)}`);
     } catch (error_) {
-        // If logger isn't available yet for any reason, fallback to globalThis.console.error
+        // If logger isn't available for any reason, fallback to globalThis.console.error
         // This prevents infinite loops or missing context in error reporting
         globalThis.console.error(
           `Failed to read package.json at ${pkgPath}:`,
