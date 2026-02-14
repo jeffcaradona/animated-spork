@@ -55,9 +55,17 @@ export function createApp(config, plugins = []) {
   ];
 
   // ── Built-in middleware ──────────────────────────────────────
-  app.use(express.json());
-  app.use(express.urlencoded({ extended: true }));
+  // CWE-770: Configure resource limits to prevent DoS attacks
+  app.use(express.json({ limit: config.maxRequestSize }));
+  app.use(express.urlencoded({ limit: config.maxRequestSize, extended: true }));
   app.use(express.static(path.join(__dirname, 'public')));
+
+  // CWE-770: Set request timeout to prevent resource exhaustion
+  app.use((req, res, next) => {
+    req.setTimeout(config.requestTimeout);
+    res.setTimeout(config.requestTimeout);
+    next();
+  });
 
   // ── Core routes ──────────────────────────────────────────────
   app.use(healthRoutes());

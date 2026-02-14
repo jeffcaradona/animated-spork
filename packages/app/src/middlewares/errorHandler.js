@@ -3,7 +3,7 @@
  * @description Express error-handling middleware for 404 catch-all and
  * generic error responses. Content-negotiates between HTML and JSON.
  */
-
+import console from 'node:console';
 import { createNotFoundError } from '../errors/appError.js';
 
 /**
@@ -31,6 +31,7 @@ export function notFoundHandler(req, res, next) {
  * @param {import('express').Response} res
  * @param {import('express').NextFunction} _next
  */
+// eslint-disable-next-line no-unused-vars
 export function errorHandler(err, req, res, _next) {
   const statusCode = err.statusCode || 500;
   const code = err.code || 'INTERNAL_ERROR';

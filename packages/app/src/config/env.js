@@ -20,14 +20,18 @@ const DEFAULTS = Object.freeze({
   nodeEnv: 'development',
   appName: 'app',
   appVersion: '0.0.0',
+  maxRequestSize: '1mb',
+  requestTimeout: 30000,
 });
 
 /**
  * @typedef {object} AppConfig
- * @property {number}  port       - HTTP listen port.
- * @property {string}  nodeEnv    - Runtime environment (development | production | test).
- * @property {string}  appName    - Human-readable application name.
- * @property {string}  appVersion - Semantic version of the consuming application.
+ * @property {number}  port              - HTTP listen port.
+ * @property {string}  nodeEnv           - Runtime environment (development | production | test).
+ * @property {string}  appName           - Human-readable application name.
+ * @property {string}  appVersion        - Semantic version of the consuming application.
+ * @property {string}  maxRequestSize    - Maximum allowed request body size (e.g., '1mb').
+ * @property {number}  requestTimeout    - Request timeout in milliseconds.
  */
 
 /**
@@ -44,6 +48,8 @@ export function createConfig(overrides = {}, env = process.env) {
     nodeEnv: overrides.nodeEnv ?? env.NODE_ENV ?? DEFAULTS.nodeEnv,
     appName: overrides.appName ?? env.APP_NAME ?? DEFAULTS.appName,
     appVersion: overrides.appVersion ?? env.APP_VERSION ?? DEFAULTS.appVersion,
+    maxRequestSize: overrides.maxRequestSize ?? env.MAX_REQUEST_SIZE ?? DEFAULTS.maxRequestSize,
+    requestTimeout: Number(overrides.requestTimeout ?? env.REQUEST_TIMEOUT ?? DEFAULTS.requestTimeout),
     ...overrides,
   };
 

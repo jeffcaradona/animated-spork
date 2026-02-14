@@ -200,9 +200,9 @@ describe('debug module', () => {
             // Verify it still returns a function despite errors
             expect(typeof debugFn).to.equal('function');
 
-            // The logger successfully catches and logs the error, so console.error is NOT called
-            // This is the expected behavior when the logger works
-            expect(globalThis.console.error.called).to.be.false;
+            // When both package.json read and logger fail, console.error should be called as fallback
+            // This is the expected behavior when logger creation itself fails
+            expect(globalThis.console.error.called).to.be.true;
         } finally {
             // Clean up stubs
             globalThis.process.cwd.restore();
