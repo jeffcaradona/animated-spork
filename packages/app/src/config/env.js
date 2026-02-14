@@ -7,6 +7,8 @@
  * Regex pattern matching sensitive key names that should be filtered
  * from config output (case-insensitive).
  */
+import process from 'node:process';
+
 const SENSITIVE_PATTERN = /SECRET|KEY|PASSWORD|TOKEN|CREDENTIAL/i;
 
 /**

@@ -16,7 +16,7 @@ import { createLogger } from '@animated-spork/shared';
  */
 export function createServer(app, config) {
   const port = config.port || 3000;
-  const logger = createLogger('app:server');
+  const logger = createLogger({ name: 'app:server' });
   const server = http.createServer(app);
 
   server.listen(port, () => {
