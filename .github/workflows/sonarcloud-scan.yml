@@ -33,23 +33,31 @@ jobs:
       
       - name: Run tests and generate coverage for all packages
         run: |
-          npm run coverage:shared-core          
+          npm run coverage          
       
       - name: Normalize LCOV paths for monorepo
         run: |
           const fs = require('fs');
           
-          // Normalize shared-core paths
-          const sharedCorePath = 'packages/shared-core/coverage/lcov.info';
-          if (fs.existsSync(sharedCorePath)) {
-            let content = fs.readFileSync(sharedCorePath, 'utf8');
+          // Normalize shared paths
+          const sharedPath = 'packages/shared/coverage/lcov.info';
+          if (fs.existsSync(sharedPath)) {
+            let content = fs.readFileSync(sharedPath, 'utf8');
             content = content.replace(/\\/g, '/');
-            content = content.replace(/^SF:(?!packages\/)(.*)/gm, 'SF:packages/shared-core/$1');
-            fs.writeFileSync(sharedCorePath, content);
-            console.log('LCOV paths normalized for shared-core');
+            content = content.replace(/^SF:(?!packages\/)(.*)/gm, 'SF:packages/shared/$1');
+            fs.writeFileSync(sharedPath, content);
+            console.log('LCOV paths normalized for shared');
           }
           
-          
+          // Normalize app paths
+          const appPath = 'packages/app/coverage/lcov.info';
+          if (fs.existsSync(appPath)) {
+            let content = fs.readFileSync(appPath, 'utf8');
+            content = content.replace(/\\/g, '/');
+            content = content.replace(/^SF:(?!packages\/)(.*)/gm, 'SF:packages/app/$1');
+            fs.writeFileSync(appPath, content);
+            console.log('LCOV paths normalized for app');
+          }
         shell: node {0}
       
       - name: SonarCloud Scan
