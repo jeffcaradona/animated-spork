@@ -1,0 +1,17 @@
+{
+    "name": "dev-app",
+    "description": "Development application demonstrating animated-spork usage",
+    "version": "0.0.1",
+    "type": "module",
+    "private": true,
+    "scripts": {
+        "start": "node src/server.js",
+        "dev": "node --watch src/server.js"
+    },
+    "dependencies": {
+        "@animated-spork/app": "^0.0.1"
+    },
+    "engines": {
+        "node": ">=22.0.0"
+    }
+}
