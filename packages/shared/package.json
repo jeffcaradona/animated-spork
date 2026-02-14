@@ -1,0 +1,45 @@
+{
+  "name": "@animated-spork/shared",
+  "version": "0.0.1",
+  "description": "Shared core utilities, logging, authentication, and error handling",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js"
+  },
+  "files": [
+    "index.js",
+    "src/"
+  ],
+  "scripts": {
+    "test": "mocha --recursive \"tests/**/*.spec.js\" --exit",
+    "coverage": "c8 mocha --recursive \"tests/**/*.spec.js\" --exit"
+  },
+  "keywords": [
+    "logging",
+    "winston",
+    "debug",
+    "jwt",
+    "authentication",
+    "error-handling",
+    "utilities"
+  ],
+  "dependencies": {
+    "debug": "^4.3.4",
+    "jsonwebtoken": "^9.0.3",
+    "winston": "^3.19.0"
+  },
+  "devDependencies": {
+    "c8": "^8.0.1",
+    "mocha": "^10.2.0"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "author": "Jeff Caradona <jeffcaradona@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/animatedspork/animated-spork"
+  }
+}

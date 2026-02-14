@@ -3,10 +3,9 @@
  * @description HTTP server factory with graceful shutdown support for
  * Kubernetes pod lifecycle (SIGTERM / SIGINT).
  */
-
-import console from 'node:console';
 import process from 'node:process';
 import http from 'node:http';
+import { createLogger } from '@animated-spork/shared';
 
 /**
  * Start an HTTP server for the given Express app.
@@ -15,16 +14,13 @@ import http from 'node:http';
  * @param {object}                    config - Config object (reads `port`).
  * @returns {{ server: http.Server, close: () => Promise<void> }}
  */
-export function createServer(app, config, logger = console) {
-  const port = config.port;
-  // ignore http warnings about insecure connections in development 
-  if (process.env.NODE_ENV === 'development') {
-    process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-  }
+export function createServer(app, config) {
+  const port = config.port || 3000;
+  const logger = createLogger('app:server');
   const server = http.createServer(app);
 
   server.listen(port, () => {
-    logger.log(`${config.appName ?? 'app'} listening on http://localhost:${port}`);
+    logger.info(`${config.appName ?? 'app'} listening on http://localhost:${port}`);
   });
 
   /**
@@ -46,10 +42,10 @@ export function createServer(app, config, logger = console) {
 
   // ── Kubernetes / container lifecycle signals ─────────────────
   const shutdown = async () => {
-    logger.log('Shutdown signal received — closing server…');
+    logger.info('Shutdown signal received — closing server…');
     try {
       await close();
-      logger.log('Server closed.');
+      logger.info('Server closed.');
       process.exit(0);
     } catch (err) {
       logger.error('Error during shutdown:', err);
