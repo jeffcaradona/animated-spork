@@ -1,0 +1,56 @@
+{
+  "name": "@animated-spork/app",
+  "version": "0.0.1",
+  "description": "Opinionated Express application factory with built-in middleware, routing, and error handling",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js"
+  },
+  "files": [
+    "index.js",
+    "src/",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "mocha --recursive \"tests/**/*.spec.js\" --exit",
+    "coverage": "c8 mocha --recursive \"tests/**/*.spec.js\" --exit"
+  },
+  "keywords": [
+    "express",
+    "application",
+    "factory",
+    "middleware",
+    "error-handling",
+    "authentication",
+    "jwt",
+    "ejs",
+    "server"
+  ],
+  "dependencies": {
+    "@animated-spork/shared": "^0.0.1",
+    "ejs": "^4.0.1",
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "c8": "^10.1.3",
+    "chai": "^6.2.2",
+    "mocha": "^12.0.0-beta-8",
+    "sinon": "^21.0.1",
+    "supertest": "^7.2.2"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "author": "Jeff Caradona <jeffcaradona@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/animatedspork/animated-spork.git",
+    "directory": "packages/app"
+  },
+  "homepage": "https://github.com/animatedspork/animated-spork/tree/main/packages/app",
+  "bugs": {
+    "url": "https://github.com/animatedspork/animated-spork/issues"
+  }
+}

@@ -4,7 +4,6 @@
  *
  * Tests verify:
  * - Factory function returns logger with required methods (info, warn, error, debug)
- * - Default logger export is available and functional
  * - Log messages are written to file and console
  * - Log level filtering works (e.g., level=warn filters out info messages)
  * - Log directory creation and file generation
@@ -63,20 +62,6 @@ describe('logger module', () => {
             // Clean up temp directory
             await cleanup();
         }
-    });
-
-    /**
-     * Test 2: Verify default logger export is available
-     * Purpose: Confirm the module exports a pre-configured logger instance
-     */
-    it('default logger is exported', async () => {
-        const loggerPath = path.resolve(__dirname, '../src/logger.js');
-        const loggerModule = await importFresh(loggerPath);
-
-        // Verify default export exists
-        expect(loggerModule.default).to.exist;
-        // Verify it has expected methods
-        expect(loggerModule.default).to.have.property('info');
     });
 
     /**

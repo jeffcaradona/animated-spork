@@ -1,0 +1,53 @@
+# Test files
+tests/
+*.spec.js
+*.test.js
+
+# Coverage reports
+coverage/
+.nyc_output
+
+# Development files
+.c8rc
+.mocharc.*
+.eslintrc*
+
+# Source
+src/
+tests/
+
+# Documentation
+documentation/
+
+# Logs
+logs/
+*.log
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Git files
+.git
+.gitignore
+
+# CI/CD
+.github/
+
+# Temporary files
+*.tmp
+tmp/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Development dependencies cache
+node_modules/
+
+# Root level files
+CONTRIBUTING.md
+sonar-project.properties

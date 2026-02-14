@@ -1,0 +1,8 @@
+tests/
+coverage/
+.DS_Store
+*.swp
+*.swo
+*~
+.mocharc.json
+sonar-project.properties
