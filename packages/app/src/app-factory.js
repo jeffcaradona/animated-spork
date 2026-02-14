@@ -8,7 +8,6 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import express from 'express';
 
-import { createLogger } from "@animated-spork/shared";
 import { healthRoutes } from './routes/health.js';
 import { indexRoutes } from './routes/index.js';
 import { adminRoutes } from './routes/admin.js';
